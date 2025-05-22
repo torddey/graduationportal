@@ -20,7 +20,7 @@ const ConfirmationPage = () => {
       setConfirmationId(state.confirmationId);
     } else {
       // If no confirmation ID is provided, create a mock one
-      setConfirmationId(`GRAD-${Date.now().toString().slice(-6)}`);
+      setConfirmationId(`GIMPA-${Date.now().toString().slice(-6)}`);
     }
   }, [location]);
   

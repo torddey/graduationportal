@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { Menu, X, User, LogOut, GraduationCap } from 'lucide-react';
+import { Menu, X, User, LogOut,} from 'lucide-react';
 import Button from '../ui/Button';
-
+import logo from '../../assets/logo_GIMPA.png'; 
 const Header = () => {
   const { user, logout, isAdmin } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,9 +24,9 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex justify-between items-center">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
-            <GraduationCap size={32} className="text-[#ffc425]" />
-            <span className="font-bold text-xl">University Graduation Portal</span>
+          <Link to="" className="flex items-center space-x-2">
+            <img src={logo} alt="Logo" className="h-10 w-auto object-contain" />            
+            
           </Link>
           
           {/* Desktop Navigation */}

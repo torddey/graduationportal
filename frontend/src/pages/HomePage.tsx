@@ -13,7 +13,7 @@ const HomePage = () => {
       <section className="bg-gradient-to-b from-[#1a365d] to-[#2a4365] text-white py-16 md:py-24">
         <div className="container mx-auto px-4 text-center">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
-            Graduation Registration Portal
+            Graduation Portal
           </h1>
           <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
             A streamlined way to register for your upcoming graduation ceremony
@@ -84,7 +84,7 @@ const HomePage = () => {
           
           <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
             <div className="bg-[#1a365d] text-white py-3 px-6">
-              <h3 className="text-xl font-semibold">Spring 2025 Graduation Timeline</h3>
+              <h3 className="text-xl font-semibold">2025 Graduation Timeline</h3>
             </div>
             
             <div className="divide-y">
@@ -103,7 +103,7 @@ const HomePage = () => {
                   <Clock size={20} className="text-blue-600" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-lg mb-1">Graduation Rehearsal</h4>
+                  <h4 className="font-semibold text-lg mb-1">Gown Collection Deadline</h4>
                   <p className="text-gray-600">May 10, 2025 at 2:00 PM</p>
                 </div>
               </div>
@@ -114,7 +114,7 @@ const HomePage = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold text-lg mb-1">Graduation Ceremony</h4>
-                  <p className="text-gray-600">May 15, 2025 at 10:00 AM</p>
+                  <p className="text-gray-600">October 15, 2025 at 10:00 AM</p>
                 </div>
               </div>
             </div>

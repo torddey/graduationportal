@@ -16,7 +16,7 @@ const LoginPage = () => {
               <h3 className="text-xl font-semibold mb-3">How to Login</h3>
               <ol className="list-decimal list-inside space-y-2 text-gray-200">
                 <li>Enter your Student ID</li>
-                <li>We'll send a one-time password (OTP) to your registered email</li>
+                <li>We'll send a one-time password (OTP) to your student email</li>
                 <li>Enter the OTP to verify your identity</li>
                 <li>Begin your graduation registration process</li>
               </ol>
@@ -27,7 +27,7 @@ const LoginPage = () => {
               <div>
                 <h4 className="font-semibold mb-1">Need Help?</h4>
                 <p className="text-sm text-gray-200">
-                  If you're having trouble logging in or haven't received your OTP, please contact the academic office at <a href="mailto:academic@university.edu" className="text-[#ffc425] hover:underline">academic@university.edu</a> or call (555) 123-4567.
+                  If you're having trouble logging in or haven't received your OTP, please contact the academic office at <a href="mailto:info@gimpa.edu.gh" className="text-[#ffc425] hover:underline">info@gimpa.edu.gh</a> or call +233-(0) 332095432.
                 </p>
               </div>
             </div>

@@ -11,8 +11,8 @@ const ProfilePage = () => {
   const [form, setForm] = useState({
     name: user?.name || '',
     email: user?.email || '',
-    phone: '555-123-4567', // Mock data
-    address: '123 University St, City, State 12345' // Mock data
+    phone: '050-123-4567', // Mock data
+    address: 'East Legon. Accra, Ghana.' // Mock data
   });
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -132,7 +132,7 @@ const ProfilePage = () => {
                   <div className="flex">
                     <div className="ml-3">
                       <p className="text-sm text-green-700">
-                        <span className="font-medium">Registration Complete!</span> You are registered for the Spring 2025 graduation ceremony.
+                        <span className="font-medium">Registration Complete!</span> You are registered for the 2025 graduation ceremony.
                       </p>
                     </div>
                   </div>

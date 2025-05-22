@@ -67,7 +67,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_proc WHERE proname = 'update_updated_at') THEN
     CREATE FUNCTION update_updated_at()
-    RETURNS TRIGGER AS $$
+    RETURNS TRIGGER AS 
     BEGIN
       NEW.updated_at = CURRENT_TIMESTAMP;
       RETURN NEW;
