@@ -6,7 +6,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (studentId: string) => Promise<void>;
-  verifyOtp: (otp: string) => Promise<boolean>;
+  verifyOtp: (otp: string, studentId: string) => Promise<boolean>;
   logout: () => void;
   isAdmin: boolean;
 }
@@ -52,10 +52,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const verifyOtp = async (otp: string): Promise<boolean> => {
+  const verifyOtp = async (otp: string, studentId: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const userData = await authService.verifyOtp(otp);
+      const userData = await authService.verifyOtp(otp, studentId);
       setUser(userData);
       setIsAdmin(userData.role === 'admin');
       return true;

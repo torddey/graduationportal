@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../db';
+import db from '../db/db';
 import multer from 'multer';
 import { parse } from 'csv-parse';
 import fs from 'fs';

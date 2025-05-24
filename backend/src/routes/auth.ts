@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../db';
+import db from '../db/db';
 import jwt from 'jsonwebtoken';
 
 const router = Router();
@@ -7,23 +7,38 @@ const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
 // Request OTP
 router.post('/request-otp', async (req, res) => {
-  const { studentId } = req.body;
-  if (!studentId) return res.status(400).json({ success: false, error: 'Missing studentId' });
+  try {
+    const { studentId } = req.body;
+    
+    if (!studentId) {
+      return res.status(400).json({ error: 'Student ID is required' });
+    }
 
-  // Generate a 6-digit OTP
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
-  const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    // Generate a random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes from now
 
-  // Store OTP in DB
-  await db.query(
-    'INSERT INTO otps (student_id, otp_code, expires_at) VALUES ($1, $2, $3)',
-    [studentId, otp, expiresAt]
-  );
+    // First, delete any existing OTPs for this student
+    await db.query(
+      'DELETE FROM otps WHERE student_id = $1',
+      [studentId]
+    );
 
-  // TODO: Send OTP via email (integrate with email service)
-  console.log(`OTP for ${studentId}: ${otp}`);
+    // Then insert the new OTP
+    await db.query(
+      `INSERT INTO otps (student_id, otp_code, expires_at)
+       VALUES ($1, $2, $3)`,
+      [studentId, otp, expiresAt]
+    );
 
-  res.json({ success: true });
+    // For development, log the OTP (remove in production)
+    console.log(`OTP for ${studentId}:${otp}`);
+
+    res.json({ success: true, message: 'OTP generated successfully' });
+  } catch (err) {
+    console.error('OTP Generation failed:', err);
+    res.status(500).json({ error: 'Failed to generate OTP' });
+  }
 });
 
 // Verify OTP
@@ -69,5 +84,6 @@ router.get('/me', (req, res) => {
     res.status(401).json({ error: 'Invalid token' });
   }
 });
+
 
 export default router;
