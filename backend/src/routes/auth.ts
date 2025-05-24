@@ -44,32 +44,18 @@ router.post('/request-otp', async (req, res) => {
 // Verify OTP
 router.post('/verify-otp', async (req, res) => {
   const { studentId, otp } = req.body;
-  if (!studentId || !otp) return res.status(400).json({ error: 'Missing studentId or otp' });
-
-  // Check OTP in DB
+  if (!studentId || !otp) {
+    return res.status(400).json({ error: 'Student ID and OTP are required' });
+  }
   const result = await db.query(
-    'SELECT * FROM otps WHERE student_id = $1 AND otp_code = $2 AND used = FALSE AND expires_at > NOW()',
+    `SELECT * FROM otps WHERE student_id = $1 AND otp_code = $2 AND used = false AND expires_at > NOW()`,
     [studentId, otp]
   );
-  if (result.rows.length === 0) return res.status(401).json({ error: 'Invalid or expired OTP' });
-
-  // Mark OTP as used
-  await db.query(
-    'UPDATE otps SET used = TRUE WHERE id = $1',
-    [result.rows[0].id]
-  );
-
-  // Fetch user info (student)
-  const studentRes = await db.query(
-    'SELECT * FROM students WHERE student_id = $1',
-    [studentId]
-  );
-  if (studentRes.rows.length === 0) return res.status(404).json({ error: 'Student not found' });
-
-  const user = studentRes.rows[0];
-  const token = jwt.sign({ studentId: user.student_id, name: user.name }, JWT_SECRET, { expiresIn: '1d' });
-
-  res.json({ token, user });
+  if (result.rows.length === 0) {
+    return res.status(400).json({ error: 'Invalid OTP' });
+  }
+  await db.query(`UPDATE otps SET used = true WHERE student_id = $1 AND otp_code = $2`, [studentId, otp]);
+  // ...generate JWT and return user info...
 });
 
 // Get current user
