@@ -67,12 +67,12 @@ const AdminUpload = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yes</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Engineering</td>
                 </tr>
-                <tr>
+                {/* <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">gpa</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Grade point average</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">No</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">3.8</td>
-                </tr>
+                </tr> */}
               </tbody>
             </table>
           </div>

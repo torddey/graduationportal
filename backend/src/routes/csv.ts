@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { io } from './index'; 
 import db from '../db/db';
 import multer from 'multer';
 import { parse } from 'csv-parse';
@@ -6,6 +7,14 @@ import fs from 'fs';
 
 const router = Router();
 const upload = multer({ dest: 'uploads/' });
+
+interface UploadedData {
+  student_id: string;
+  name: string;
+  email: string;
+  program: string;
+  faculty: string; 
+}
 
 router.post('/upload-eligible', upload.single('file'), async (req, res) => {
   if (!req.file) return res.status(400).json({ success: false, errors: ['No file uploaded'] });
@@ -42,13 +51,14 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
           );
           count++;
         } catch (err) {
-          errors.push(`Failed to insert student_id ${student.student_id}: ${err.message}`);
+          const errorMsg = err instanceof Error ? err.message : String(err);
+          errors.push(`Failed to insert student_id ${student.student_id}: ${errorMsg}`);
         }
       }
       // Log the upload
       await db.query(
         `INSERT INTO eligible_uploads (uploaded_by, file_name) VALUES ($1, $2)`,
-        ['admin', req.file.originalname]
+        ['admin', req.file?.originalname || 'unknown']
       );
       fs.unlinkSync(filePath); // Clean up uploaded file
       res.json({ success: errors.length === 0, count, errors });
@@ -57,6 +67,42 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
       fs.unlinkSync(filePath);
       res.status(500).json({ success: false, errors: [err.message] });
     });
+});
+
+router.post('/upload-csv', async (req, res) => {
+  try {
+    const uploadedData: UploadedData[] = []; // Explicitly typed
+
+    // Assume parsedRows is the result of parsing the CSV file
+    const parsedRows = [
+      ['ST12345', 'Jane Smith', 'jane.smith@university.edu', 'Computer Science', 'Engineering'],
+      ['ST67890', 'John Doe', 'john.doe@university.edu', 'Information Technology', 'Engineering'],
+    ];
+
+    for (const row of parsedRows) {
+      uploadedData.push({
+        student_id: row[0],
+        name: row[1],
+        email: row[2],
+        program: row[3],
+        faculty: row[4], 
+      });
+
+      await db.query(
+        `INSERT INTO students (student_id, name, email, program, faculty) VALUES ($1, $2, $3, $4, $5)`,
+        [row[0], row[1], row[2], row[3], row[4]]
+      );
+    }
+
+    // Emit an event to notify the frontend
+    io.emit('csv-upload-complete', { success: true, data: uploadedData });
+    console.log('Emitted csv-upload-complete event:', uploadedData);
+
+    res.json({ success: true, message: 'CSV uploaded and processed successfully' });
+  } catch (err) {
+    console.error('CSV upload failed:', err);
+    res.status(500).json({ error: 'Failed to upload CSV' });
+  }
 });
 
 export default router;

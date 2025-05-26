@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+import { useSocket } from '../../hooks/useSocket';
 import DashboardStats from '../../components/admin/DashboardStats';
 import AuditLogTable from '../../components/admin/AuditLogTable';
 import RegisteredStudentsTable from '../../components/admin/RegisteredStudentsTable';
@@ -5,7 +7,37 @@ import { Clock, Download, Mail, Upload } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Link } from 'react-router-dom';
 
+
+interface UploadedData {
+  student_id: string;
+  name: string;
+  email: string;
+  program: string;
+}
+
+
 const AdminDashboard = () => {
+  const [students, setStudents] = useState<UploadedData[]>([]);
+  // Fetch students data from the API   
+  useEffect(() => {
+    const fetchStudents = async () => {
+      const res = await fetch('/api/students');
+      const data = await res.json();
+      console.log('Fetched students:', data);
+      setStudents(data);
+    };
+
+    fetchStudents();
+  }, []);
+
+  // Listen for new student data via WebSocket
+  useSocket((data: { success: boolean; data: UploadedData[] }) => {
+    console.log('Received data:', data);
+    if (data.success) {
+      setStudents((prevStudents) => [...prevStudents, ...data.data]);
+    }
+  });
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
@@ -84,6 +116,30 @@ const AdminDashboard = () => {
           <h2 className="text-xl font-semibold text-gray-800 mb-4">System Activity</h2>
           <AuditLogTable />
         </div>
+      </div>
+
+      <div>
+        <h1>Admin Dashboard</h1>
+        <table>
+          <thead>
+            <tr>
+              <th>Student ID</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Program</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map((student) => (
+              <tr key={student.student_id}>
+                <td>{student.student_id}</td>
+                <td>{student.name}</td>
+                <td>{student.email}</td>
+                <td>{student.program}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
