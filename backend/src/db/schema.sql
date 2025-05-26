@@ -50,7 +50,7 @@ CREATE TABLE admin_users (
 
 CREATE TABLE otps (
     id SERIAL PRIMARY KEY,
-    student_id VARCHAR(50) NOT NULL,
+    student_id VARCHAR(50) NOT NULL, -- Can store student_id or admin username
     otp_code VARCHAR(10) NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     used BOOLEAN DEFAULT FALSE,
@@ -80,3 +80,8 @@ GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO evans;
 -- Set default privileges for future objects
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO evans;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO evans;
+
+SELECT student_id, name FROM students;
+
+
+

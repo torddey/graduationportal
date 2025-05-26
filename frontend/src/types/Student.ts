@@ -12,4 +12,5 @@ export interface Student {
   requiredCredits: number;
   address: string;
   phone: string;
+  role?: 'student' | 'admin'; 
 }

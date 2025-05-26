@@ -6,29 +6,28 @@ import Button from '../ui/Button';
 import TextInput from '../ui/TextInput';
 
 const LoginForm = () => {
-  const [step, setStep] = useState<'studentId' | 'otp'>('studentId');
-  const [studentId, setStudentId] = useState('');
+  const [step, setStep] = useState<'userId' | 'otp'>('userId');
+  const [userId, setUserId] = useState('');
   const [otp, setOtp] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, verifyOtp } = useAuth();
+  const { login, verifyOtp, user } = useAuth();
   const navigate = useNavigate();
 
-  const handleStudentIdSubmit = async (e: React.FormEvent) => {
+  const handleUserIdSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!studentId.trim()) {
-      toast.error('Please enter your student ID');
+    if (!userId.trim()) {
+      toast.error('Please enter your User ID');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      // Store studentId temporarily for admin check
-      localStorage.setItem('tempStudentId', studentId);
-      await login(studentId);
+      localStorage.setItem('tempUserId', userId);
+      await login(userId);
       toast.success('OTP sent to your registered email');
       setStep('otp');
     } catch (error) {
-      toast.error('Failed to send OTP. Please check your student ID.');
+      toast.error('Failed to send OTP. Please check your User ID.');
     } finally {
       setIsSubmitting(false);
     }
@@ -43,12 +42,16 @@ const LoginForm = () => {
 
     setIsSubmitting(true);
     try {
-      const success = await verifyOtp(otp);
+      const success = await verifyOtp(userId, otp);
       if (success) {
         toast.success('Login successful');
-        // Redirect admin to dashboard, students to registration
-        const isAdmin = localStorage.getItem('tempStudentId') === 'admin';
-        navigate(isAdmin ? '/admin' : '/registration');
+        localStorage.removeItem('tempUserId');
+        // Use the user object from context to determine role
+        if (user?.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/registration');
+        }
       } else {
         toast.error('Invalid OTP. Please try again.');
       }
@@ -61,17 +64,17 @@ const LoginForm = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full mx-auto">
-      {step === 'studentId' ? (
+      {step === 'userId' ? (
         <>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Login with Student ID</h2>
-          <form onSubmit={handleStudentIdSubmit}>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Login</h2>
+          <form onSubmit={handleUserIdSubmit}>
             <div className="mb-6">
               <TextInput
-                id="studentId"
-                label="Student ID"
-                value={studentId}
-                onChange={(e) => setStudentId(e.target.value)}
-                placeholder="Enter your student ID"
+                id="userId"
+                label="User ID"
+                value={userId}
+                onChange={(e) => setUserId(e.target.value)}
+                placeholder="Enter your Student ID, Username, or Email"
                 required
                 disabled={isSubmitting}
               />
@@ -80,7 +83,7 @@ const LoginForm = () => {
               type="submit" 
               fullWidth 
               loading={isSubmitting}
-              disabled={isSubmitting || !studentId.trim()}
+              disabled={isSubmitting || !userId.trim()}
             >
               Request OTP
             </Button>
@@ -116,10 +119,10 @@ const LoginForm = () => {
             <button
               type="button"
               className="mt-4 text-center w-full text-blue-600 hover:text-blue-800"
-              onClick={() => setStep('studentId')}
+              onClick={() => setStep('userId')}
               disabled={isSubmitting}
             >
-              Back to Student ID
+              Back to User ID
             </button>
           </form>
         </>

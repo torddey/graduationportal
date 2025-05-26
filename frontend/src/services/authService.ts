@@ -1,36 +1,47 @@
-import { User } from '../types/User';
+
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const authService = {
-  // Request OTP for login
-  async requestOtp(studentId: string): Promise<void> {
+  // Request OTP for login (student or admin)
+  async requestOtp(userId: string): Promise<void> {
     const res = await fetch(`${API_URL}/auth/request-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ studentId }),
+      body: JSON.stringify({ userId }),
     });
-    if (!res.ok) throw new Error('Failed to request OTP');
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Failed to request OTP');
+    }
   },
 
-  // Verify OTP and get user data
-  async verifyOtp(otp: string, studentId: string): Promise<User> {
+  // Verify OTP and get user data (student or admin)
+  async verifyOtp(userId: string, otp: string): Promise<any> {
+    if (!userId || !otp) {
+      throw new Error('User ID and OTP are required');
+    }
+
     const res = await fetch(`${API_URL}/auth/verify-otp`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ otp, studentId }),
+      body: JSON.stringify({ userId, otp }),
     });
-    if (!res.ok) throw new Error('Invalid OTP');
+
+    if (!res.ok) {
+      const errorData = await res.json();
+      throw new Error(errorData.error || 'Invalid OTP');
+    }
+
     const { token, user } = await res.json();
 
-    // Store auth token and user data in localStorage
     localStorage.setItem('authToken', token);
     localStorage.setItem('userData', JSON.stringify(user));
     return user;
   },
 
-  // Get current authenticated user data
-  async getCurrentUser(): Promise<User | null> {
+  // Get current authenticated user data (student or admin)
+  async getCurrentUser(): Promise<any | null> {
     const token = localStorage.getItem('authToken');
     if (!token) return null;
 
