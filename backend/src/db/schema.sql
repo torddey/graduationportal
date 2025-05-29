@@ -1,6 +1,6 @@
 -- Connect to graduation_db first!
 
--- Drop existing tables if they exist (in dependency order)
+-- Drop existing tables if they exist 
 DROP TABLE IF EXISTS eligible_uploads CASCADE;
 DROP TABLE IF EXISTS otps CASCADE;
 DROP TABLE IF EXISTS admin_users CASCADE;
@@ -50,7 +50,7 @@ CREATE TABLE admin_users (
 
 CREATE TABLE otps (
     id SERIAL PRIMARY KEY,
-    student_id VARCHAR(50) NOT NULL, -- Can store student_id or admin username
+    student_id VARCHAR(50) NOT NULL, 
     otp_code VARCHAR(10) NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     used BOOLEAN DEFAULT FALSE,

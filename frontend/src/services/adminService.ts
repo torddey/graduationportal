@@ -8,13 +8,23 @@ export const adminService = {
     const formData = new FormData();
     formData.append('file', file);
 
-    const res = await fetch(`${API_URL}/admin/upload-eligible`, {
-      method: 'POST',
-      body: formData,
-    });
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
-    if (!res.ok) throw new Error('Failed to upload CSV');
-    return res.json();
+    try {
+      const response = await fetch(`${API_URL}/csv/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      throw error;
+    }
   },
 
   // Get dashboard stats

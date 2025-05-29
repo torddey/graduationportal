@@ -5,7 +5,7 @@ import jwt from 'jsonwebtoken';
 const router = Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-// Unified: Request OTP for both students and admins
+// Request OTP for both students and admins
 router.post('/request-otp', async (req, res) => {
   try {
     const { userId } = req.body;
@@ -39,7 +39,7 @@ router.post('/request-otp', async (req, res) => {
   }
 });
 
-// Unified: Verify OTP for both students and admins
+// Verify OTP for both students and admins
 router.post('/verify-otp', async (req, res) => {
   const { userId, otp } = req.body;
   if (!userId || !otp) return res.status(400).json({ error: 'User ID and OTP are required' });

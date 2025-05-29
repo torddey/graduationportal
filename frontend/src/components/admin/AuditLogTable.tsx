@@ -7,7 +7,7 @@ const AuditLogTable = () => {
     id: string;
     action: string;
     user: string;
-    timestamp: string;
+    timestamp: string | null;
     details: string;
   }>>([]);
   const [loading, setLoading] = useState(true);
@@ -15,12 +15,45 @@ const AuditLogTable = () => {
   const [totalLogs, setTotalLogs] = useState(0);
   const logsPerPage = 10;
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
+  const fetchAuditLogs = async () => {
+    try {
+      const response = await fetch(`${API_URL}/auditlogs`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log('Fetched audit logs:', data); // Debug the fetched logs
+      setLogs(data);
+    } catch (error) {
+      console.error('Error fetching audit logs:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchAuditLogs();
+  }, []);
+
   useEffect(() => {
     const fetchLogs = async () => {
       setLoading(true);
       try {
         const data = await adminService.getAuditLogs(page, logsPerPage);
-        setLogs(data.logs);
+
+        const cleanedLogs = data.logs.map((log: any) => {
+          const isValidDate = typeof log.timestamp === 'string' && !isNaN(new Date(log.timestamp).getTime());
+          if (!isValidDate) {
+            console.warn('Invalid timestamp detected:', log.timestamp, log);
+          }
+
+          return {
+            ...log,
+            timestamp: isValidDate ? log.timestamp : null,
+          };
+        });
+
+        setLogs(cleanedLogs);
         setTotalLogs(data.total);
       } catch (error) {
         console.error('Failed to fetch audit logs:', error);
@@ -32,16 +65,23 @@ const AuditLogTable = () => {
     fetchLogs();
   }, [page]);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) {
+      return 'No Timestamp'; // Fallback for missing dates
+    }
+
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
+    if (isNaN(date.getTime())) {
+      return 'Invalid Date'; // Fallback for invalid dates
+    }
+
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
+      month: 'long',
+      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
-    }).format(date);
+    });
   };
 
   const getActionColor = (action: string) => {
@@ -120,7 +160,7 @@ const AuditLogTable = () => {
                   {log.user}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {formatDate(log.timestamp)}
+                  {formatDate(log.timestamp)} {/* Use the updated formatDate function */}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500 max-w-md truncate">
                   {log.details}

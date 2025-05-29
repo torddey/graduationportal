@@ -105,4 +105,21 @@ router.post('/upload-csv', async (req, res) => {
   }
 });
 
+// POST /api/csv/upload - Handle CSV file upload
+router.post('/upload', upload.single('file'), async (req, res) => {
+  try {
+    console.log('Uploaded file:', req.file); // Debug the uploaded file
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    // Process the CSV file here (e.g., parse and insert into the database)
+    res.status(200).json({ message: 'File uploaded successfully' });
+  } catch (error) {
+    console.error('Error uploading file:', error);
+    res.status(500).json({ error: 'Failed to upload file' });
+  }
+});
+
 export default router;

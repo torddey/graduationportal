@@ -7,7 +7,6 @@ import { Clock, Download, Mail, Upload } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Link } from 'react-router-dom';
 
-
 interface UploadedData {
   student_id: string;
   name: string;
@@ -15,20 +14,33 @@ interface UploadedData {
   program: string;
 }
 
-
 const AdminDashboard = () => {
-  const [students, setStudents] = useState<UploadedData[]>([]);
+  const [, setStudents] = useState<UploadedData[]>([]);
+  
+  // API URL -  calls backend 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  
   // Fetch students data from the API   
   useEffect(() => {
     const fetchStudents = async () => {
-      const res = await fetch('/api/students');
-      const data = await res.json();
-      console.log('Fetched students:', data);
-      setStudents(data);
+      try {
+        // Fixed: Call backend API instead of relative path
+        const res = await fetch(`${API_URL}/students`);
+        if (!res.ok) {
+          throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log('Fetched students:', data);
+        setStudents(data);
+      } catch (error) {
+        console.error('Error fetching students:', error);
+        // Set empty array on error to prevent crashes
+        setStudents([]);
+      }
     };
 
     fetchStudents();
-  }, []);
+  }, [API_URL]);
 
   // Listen for new student data via WebSocket
   useSocket((data: { success: boolean; data: UploadedData[] }) => {
@@ -118,7 +130,7 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      <div>
+      {/* <div>
         <h1>Admin Dashboard</h1>
         <table>
           <thead>
@@ -140,7 +152,7 @@ const AdminDashboard = () => {
             ))}
           </tbody>
         </table>
-      </div>
+      </div> */}
     </div>
   );
 };

@@ -1,7 +1,7 @@
 -- Clear existing data
 TRUNCATE students, registrations, otps, audit_logs, admin_users, eligible_uploads RESTART IDENTITY CASCADE;
 
--- Insert test students
+-- Insert students
 INSERT INTO students (student_id, name, email, program, phone, eligibility_status) VALUES
 ('123456', 'John Doe', 'john.doe@st.gimpa.edu.gh', 'BSc Computer Science', '+233123456789', true),
 ('234567', 'Jane Smith', 'jane.smith@st.gimpa.edu.gh', 'BSc Information Technology', '+233234567890', true);

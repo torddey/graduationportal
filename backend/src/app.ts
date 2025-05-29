@@ -10,14 +10,16 @@ import authRoutes from './routes/auth';
 import adminRoutes from './routes/admin';
 import emailRoutes from './routes/email';
 import csvRoutes from './routes/csv';
+import studentsRoutes from './routes/students';
+import auditLogsRoutes from './routes/auditlogs';
 
 dotenv.config();
 
 const app = express();
-const server = http.createServer(app); // Create an HTTP server
+const server = http.createServer(app); 
 const io = new Server(server, {
   cors: {
-    origin: '*', // Replace with your frontend's URL in production
+    origin: '*', // Replace with frontend's URL in production
   },
 });
 
@@ -34,6 +36,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/email', emailRoutes);
 app.use('/api/csv', csvRoutes);
+app.use('/api/students', studentsRoutes);
+app.use('/api/auditlogs', auditLogsRoutes);
 
 // WebSocket connection
 io.on('connection', (socket) => {
@@ -46,6 +50,14 @@ io.on('connection', (socket) => {
 
 // Export the Socket.IO instance for use in other files
 export { io };
+
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 
 // Start the server
 const PORT = process.env.PORT || 5000;

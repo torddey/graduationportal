@@ -69,39 +69,23 @@ const RegistrationForm = () => {
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!form.agreeToTerms) {
-      toast.error('You must agree to the terms and conditions');
-      return;
-    }
-    
-    setIsSubmitting(true);
-    
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+
     try {
-      const result = await registrationService.submitRegistration(form);
-      
-      if (result.success && result.confirmationId) {
-        // Send confirmation email
-        await emailService.sendConfirmationEmail(
-          form.email,
-          form.name,
-          result.confirmationId
-        );
-        
-        // Navigate to confirmation page with the ID
-        navigate('/confirmation', { 
-          state: { confirmationId: result.confirmationId } 
-        });
-      } else {
-        toast.error('Registration failed. Please try again.');
-      }
+      const registrationData = {
+        student_id: form.studentId, 
+        name: form.name,
+        email: form.email,
+        program: form.program,
+        faculty: '', 
+      };
+
+      const result = await registrationService.submitRegistration(registrationData);
+      console.log('Registration successful:', result);
     } catch (error) {
-      toast.error('An error occurred during registration');
-      console.error(error);
-    } finally {
-      setIsSubmitting(false);
+      console.error('Error during registration:', error);
+      alert('Failed to submit registration');
     }
   };
 

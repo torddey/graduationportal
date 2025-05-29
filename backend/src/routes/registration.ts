@@ -23,4 +23,31 @@ router.post('/submit', async (req, res) => {
   }
 });
 
+router.post('/', async (req, res) => {
+  try {
+    const { student_id, name, email, program, faculty } = req.body;
+
+    // Validate student_id exists in students table
+    const studentExists = await db.query(
+      'SELECT * FROM students WHERE student_id = $1',
+      [student_id]
+    );
+
+    if (studentExists.rows.length === 0) {
+      return res.status(400).json({ error: 'Student ID does not exist in students table' });
+    }
+
+    // Insert into registrations table
+    await db.query(
+      `INSERT INTO registrations (student_id, name, email, program, faculty) VALUES ($1, $2, $3, $4, $5)`,
+      [student_id, name, email, program, faculty]
+    );
+
+    res.status(201).json({ message: 'Registration successful' });
+  } catch (error) {
+    console.error('Error during registration:', error);
+    res.status(500).json({ error: 'Failed to submit registration' });
+  }
+});
+
 export default router;

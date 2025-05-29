@@ -47,7 +47,10 @@ const CsvUploader = () => {
     
     try {
       const result = await adminService.uploadEligibleStudents(file);
-      setUploadStats(result);
+      setUploadStats({
+        ...result,
+        errors: result.errors ?? [],
+      });
       
       if (result.success) {
         toast.success(`Successfully uploaded ${result.count} eligible students`);

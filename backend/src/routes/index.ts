@@ -2,7 +2,6 @@ import { Router } from 'express';
 import db from '../db/db'; 
 import { Server } from 'socket.io';
 import http from 'http';
-// Make sure the correct path to your Express app is used
 import app from '../app'; 
 
 const router = Router();
@@ -11,7 +10,6 @@ router.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Add more routes here
 
 // Create an HTTP server
 const server = http.createServer(app);
