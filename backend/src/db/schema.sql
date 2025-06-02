@@ -1,3 +1,4 @@
+-- Active: 1748540584899@@127.0.0.1@5432@graduation_db
 -- Connect to graduation_db first!
 
 -- Drop existing tables if they exist 
@@ -20,16 +21,24 @@ CREATE TABLE students (
     email VARCHAR(100) NOT NULL,
     program VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
+    address VARCHAR(255),
+    postalCode VARCHAR(20),
+    city VARCHAR(100),
+    country VARCHAR(100),
     eligibility_status BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Add an index to the student_id for faster lookups/upserts
+CREATE UNIQUE INDEX idx_students_student_id ON students (student_id);
 
 CREATE TABLE registrations (
     id SERIAL PRIMARY KEY,
     student_id VARCHAR(50) NOT NULL REFERENCES students(student_id),
     confirmation_id UUID DEFAULT gen_random_uuid(),
     form_data JSONB,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(student_id)
 );
 
 CREATE TABLE audit_logs (
@@ -62,7 +71,8 @@ CREATE TABLE eligible_uploads (
     id SERIAL PRIMARY KEY,
     uploaded_by VARCHAR(100),
     upload_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    file_name VARCHAR(255)
+    file_name VARCHAR(255),
+    errors_count INTEGER DEFAULT 0
 );
 
 -- Set ownership of tables to evans
@@ -82,6 +92,8 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO evans;
 ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO evans;
 
 SELECT student_id, name FROM students;
+
+ALTER TABLE eligible_uploads ADD COLUMN errors_count INTEGER DEFAULT 0;
 
 
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSocket } from '../../hooks/useSocket';
+import { useSocket, CsvUploadCompleteEvent } from '../../hooks/useSocket';
 import DashboardStats from '../../components/admin/DashboardStats';
 import AuditLogTable from '../../components/admin/AuditLogTable';
 import RegisteredStudentsTable from '../../components/admin/RegisteredStudentsTable';
@@ -12,41 +12,43 @@ interface UploadedData {
   name: string;
   email: string;
   program: string;
+  phone: string;
 }
 
 const AdminDashboard = () => {
-  const [, setStudents] = useState<UploadedData[]>([]);
+  const [students, setStudents] = useState<UploadedData[]>([]);
   
   // API URL -  calls backend 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   
   // Fetch students data from the API   
-  useEffect(() => {
-    const fetchStudents = async () => {
-      try {
-        // Fixed: Call backend API instead of relative path
-        const res = await fetch(`${API_URL}/students`);
-        if (!res.ok) {
-          throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        const data = await res.json();
-        console.log('Fetched students:', data);
-        setStudents(data);
-      } catch (error) {
-        console.error('Error fetching students:', error);
-        // Set empty array on error to prevent crashes
-        setStudents([]);
+  const fetchStudents = async () => {
+    try {
+      // Fixed: Call backend API instead of relative path
+      const res = await fetch(`${API_URL}/students`);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
       }
-    };
+      const data = await res.json();
+      console.log('Fetched students:', data);
+      setStudents(data);
+    } catch (error) {
+      console.error('Error fetching students:', error);
+      // Set empty array on error to prevent crashes
+      setStudents([]);
+    }
+  };
 
+  useEffect(() => {
     fetchStudents();
   }, [API_URL]);
 
-  // Listen for new student data via WebSocket
-  useSocket((data: { success: boolean; data: UploadedData[] }) => {
-    console.log('Received data:', data);
+  // Listen for CSV upload completion via WebSocket
+  useSocket((data: CsvUploadCompleteEvent) => {
+    console.log('Received CSV upload complete event:', data);
     if (data.success) {
-      setStudents((prevStudents) => [...prevStudents, ...data.data]);
+      console.log('CSV upload successful, refetching students...');
+      fetchStudents(); // Refetch students to update the list
     }
   });
 
@@ -78,12 +80,14 @@ const AdminDashboard = () => {
       </div>
       
       {/* Stats */}
-      <div className="mb-8">
+      {/* Removed DashboardStats component */}
+      {/* <div className="mb-8">
         <DashboardStats />
-      </div>
+      </div> */}
       
       {/* Upcoming Deadlines */}
-      <div className="mb-8">
+      {/* Removed Upcoming Deadlines section */}
+      {/* <div className="mb-8">
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Upcoming Deadlines</h2>
         <div className="bg-white rounded-lg shadow-md p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -115,7 +119,7 @@ const AdminDashboard = () => {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       
       {/* Registration Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
@@ -130,29 +134,66 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* <div>
-        <h1>Admin Dashboard</h1>
-        <table>
-          <thead>
-            <tr>
-              <th>Student ID</th>
-              <th>Name</th>
-              <th>Email</th>
-              <th>Program</th>
-            </tr>
-          </thead>
-          <tbody>
-            {students.map((student) => (
-              <tr key={student.student_id}>
-                <td>{student.student_id}</td>
-                <td>{student.name}</td>
-                <td>{student.email}</td>
-                <td>{student.program}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div> */}
+      {/* Eligible Students Table */}
+      <div className="mb-8">
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">All Eligible Students</h2>
+        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Student ID
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Name
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Email
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Program
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Contact
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {students.map((student) => (
+                  <tr key={student.student_id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      {student.student_id}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {student.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <a href={`mailto:${student.email}`} className="text-blue-600 hover:text-blue-800">
+                        {student.email}
+                      </a>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {student.program}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {student.phone}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                        Eligible
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

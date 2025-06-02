@@ -42,14 +42,18 @@ const AuditLogTable = () => {
         const data = await adminService.getAuditLogs(page, logsPerPage);
 
         const cleanedLogs = data.logs.map((log: any) => {
-          const isValidDate = typeof log.timestamp === 'string' && !isNaN(new Date(log.timestamp).getTime());
+          // Explicitly check for null or undefined before attempting Date conversion
+          const rawTimestamp = log.timestamp;
+          const isValidDate = typeof rawTimestamp === 'string' && rawTimestamp !== '' && !isNaN(new Date(rawTimestamp).getTime());
+
           if (!isValidDate) {
-            console.warn('Invalid timestamp detected:', log.timestamp, log);
+            console.warn('Invalid or missing timestamp detected:', rawTimestamp, log);
           }
 
           return {
             ...log,
-            timestamp: isValidDate ? log.timestamp : null,
+            // Use a default value like null if the timestamp is invalid or missing
+            timestamp: isValidDate ? rawTimestamp : null,
           };
         });
 

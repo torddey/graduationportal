@@ -42,6 +42,11 @@ const RegistrationForm = () => {
     name: user?.name || '',
     email: user?.email || '',
     program: user?.program || '',
+    phone: user?.phone || '',
+    address: user?.address || '',
+    postalCode: user?.postalCode || '',
+    city: user?.city || '',
+    country: user?.country || '',
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
@@ -55,7 +60,7 @@ const RegistrationForm = () => {
       setForm(prev => ({
         ...prev,
         [parent]: {
-          ...prev[parent as keyof typeof prev],
+          ...prev[parent as keyof typeof prev] as object,
           [child]: value
         }
       }));
@@ -72,20 +77,49 @@ const RegistrationForm = () => {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    if (!user || !form.studentId) {
+      toast.error('User data is not loaded, or student ID is missing.');
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
-      const registrationData = {
-        student_id: form.studentId, 
+      const registrationData: RegistrationFormType = {
+        studentId: form.studentId,
         name: form.name,
         email: form.email,
         program: form.program,
-        faculty: '', 
+        phone: form.phone,
+        address: form.address,
+        postalCode: form.postalCode,
+        city: form.city,
+        country: form.country,
+        emergencyContact: form.emergencyContact,
+        guestCount: form.guestCount,
+        specialRequirements: form.specialRequirements,
+        pronounceName: form.pronounceName,
+        attendanceConfirmed: form.attendanceConfirmed,
+        agreeToTerms: form.agreeToTerms,
       };
 
+      console.log('Submitting registration with data:', registrationData);
       const result = await registrationService.submitRegistration(registrationData);
       console.log('Registration successful:', result);
+
+      console.log('Result success is true. Proceeding with UI update.');
+      toast.success('Registration submitted successfully!');
+      console.log('Success toast shown.');
+      navigate('/confirmation', { state: { confirmationId: result.confirmationId } });
+      console.log('Navigation triggered.');
+
     } catch (error) {
       console.error('Error during registration:', error);
-      alert('Failed to submit registration');
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred during registration';
+      toast.error(errorMessage);
+      console.log('Catch block error toast shown.');
+    } finally {
+      setIsSubmitting(false);
+      console.log('setIsSubmitting(false) called.');
     }
   };
 
@@ -103,7 +137,6 @@ const RegistrationForm = () => {
     }
   };
 
-  // Validate current step
   const validateStep = () => {
     if (step === 1) {
       return !!(form.name && form.email && form.phone && form.address && form.postalCode && form.city && form.country);
@@ -370,7 +403,7 @@ const RegistrationForm = () => {
             <Button
               type="submit"
               loading={isSubmitting}
-              disabled={isSubmitting || !form.agreeToTerms}
+              disabled={isSubmitting || !user || !form.studentId || !form.agreeToTerms || step !== totalSteps}
             >
               Submit Registration
             </Button>

@@ -80,17 +80,43 @@ router.get('/audit-logs', async (req, res) => {
     const limit = parseInt(req.query.limit as string) || 10;
     const offset = (page - 1) * limit;
 
-    // Get total count
-    const countResult = await db.query('SELECT COUNT(*) as count FROM eligible_uploads');
-    const total = parseInt(countResult.rows[0].count);
+    // Get total count from both tables
+    const countResult = await db.query(`
+      SELECT 
+        (SELECT COUNT(*) FROM eligible_uploads) +
+        (SELECT COUNT(*) FROM audit_logs) as total_count
+    `);
+    const total = parseInt(countResult.rows[0].total_count);
 
-    // Get paginated results
-    const logsResult = await db.query(
-      `SELECT * FROM eligible_uploads 
-       ORDER BY upload_time DESC 
-       LIMIT $1 OFFSET $2`,
-      [limit, offset]
-    );
+    // Get paginated results from both tables
+    const logsResult = await db.query(`
+      WITH combined_logs AS (
+        -- Eligible uploads
+        SELECT 
+          id,
+          'UPLOAD' as action,
+          uploaded_by as user_name,
+          file_name as details,
+          upload_time as timestamp,
+          errors_count,
+          'eligible_upload' as log_type
+        FROM eligible_uploads
+        UNION ALL
+        -- Audit logs
+        SELECT 
+          id,
+          action,
+          user_name,
+          details,
+          timestamp,
+          NULL as errors_count,
+          'audit_log' as log_type
+        FROM audit_logs
+      )
+      SELECT * FROM combined_logs
+      ORDER BY timestamp DESC
+      LIMIT $1 OFFSET $2
+    `, [limit, offset]);
 
     res.json({
       logs: logsResult.rows,

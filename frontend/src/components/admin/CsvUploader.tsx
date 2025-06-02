@@ -1,15 +1,40 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { adminService } from '../../services/adminService';
+import { useSocket, CsvUploadCompleteEvent } from '../../hooks/useSocket';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
+import ConnectionStatus from '../ui/ConnectionStatus';
 
 const CsvUploader = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string[][]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadStep, setUploadStep] = useState<'select' | 'preview' | 'uploading' | 'success'>('select');
-  const [uploadStats, setUploadStats] = useState({ success: false, count: 0, errors: [] as string[] });
+  const [uploadStats, setUploadStats] = useState<CsvUploadCompleteEvent>({ 
+    success: false, 
+    count: 0, 
+    errors: [],
+    timestamp: ''
+  });
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Set up socket listener for upload completion with enhanced logging
+  const { connectionState } = useSocket((data: CsvUploadCompleteEvent) => {
+    console.log('[CsvUploader] Received upload complete event:', data);
+    setUploadStats(data);
+    
+    if (data.success) {
+      console.log('[CsvUploader] Upload successful, transitioning to success state');
+      setUploadStep('success');
+      toast.success(`Successfully uploaded ${data.count} eligible students`);
+    } else {
+      console.log('[CsvUploader] Upload failed, returning to preview state');
+      setUploadStep('preview');
+      const errorMessage = data.errors?.[0] || 'Unknown error';
+      toast.error(`Upload failed: ${errorMessage}`);
+    }
+    setIsUploading(false);
+  });
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -47,23 +72,13 @@ const CsvUploader = () => {
     
     try {
       const result = await adminService.uploadEligibleStudents(file);
-      setUploadStats({
-        ...result,
-        errors: result.errors ?? [],
-      });
-      
-      if (result.success) {
-        toast.success(`Successfully uploaded ${result.count} eligible students`);
-        setUploadStep('success');
-      } else {
-        toast.error('Upload failed');
-        setUploadStep('preview');
-      }
+      console.log('Upload API response:', result);
+      // Note: We don't set success state here as it's handled by the socket event
     } catch (error) {
       console.error('Upload error:', error);
-      toast.error('An error occurred during upload');
+      const errorMessage = error instanceof Error ? error.message : 'An error occurred during upload';
+      toast.error(errorMessage);
       setUploadStep('preview');
-    } finally {
       setIsUploading(false);
     }
   };
@@ -72,7 +87,7 @@ const CsvUploader = () => {
     setFile(null);
     setPreview([]);
     setUploadStep('select');
-    setUploadStats({ success: false, count: 0, errors: [] });
+    setUploadStats({ success: false, count: 0, errors: [], timestamp: '' });
     // Reset file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -81,7 +96,10 @@ const CsvUploader = () => {
   
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Upload Eligible Students</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-semibold text-gray-800">Upload Eligible Students</h2>
+        <ConnectionStatus />
+      </div>
       
       {uploadStep === 'select' && (
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
@@ -192,6 +210,24 @@ const CsvUploader = () => {
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-lg text-gray-700">Uploading and processing student data...</p>
           <p className="text-sm text-gray-500">This may take a few moments</p>
+          {connectionState.status !== 'connected' && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
+              <p className="text-sm text-red-600 font-medium">Connection Issue</p>
+              <p className="text-sm text-red-500 mt-1">
+                {connectionState.lastError || 'Socket connection issue detected'}
+                {connectionState.reconnectAttempts > 0 && (
+                  <span className="block mt-1">
+                    Reconnection attempt {connectionState.reconnectAttempts} of 5
+                  </span>
+                )}
+                {connectionState.latency > 1000 && (
+                  <span className="block mt-1">
+                    High latency detected: {connectionState.latency}ms
+                  </span>
+                )}
+              </p>
+            </div>
+          )}
         </div>
       )}
       
@@ -216,6 +252,11 @@ const CsvUploader = () => {
           <h3 className="text-xl font-medium text-gray-800 mb-2">Upload Complete!</h3>
           <p className="text-gray-600 mb-6">
             Successfully processed {uploadStats.count} eligible student records.
+            {uploadStats.timestamp && (
+              <span className="block text-sm text-gray-500 mt-1">
+                Completed at {new Date(uploadStats.timestamp).toLocaleString()}
+              </span>
+            )}
           </p>
           {uploadStats.errors && uploadStats.errors.length > 0 && (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
