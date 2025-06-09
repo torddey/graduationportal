@@ -3,7 +3,8 @@ import { useSocket, CsvUploadCompleteEvent } from '../../hooks/useSocket';
 import DashboardStats from '../../components/admin/DashboardStats';
 import AuditLogTable from '../../components/admin/AuditLogTable';
 import RegisteredStudentsTable from '../../components/admin/RegisteredStudentsTable';
-import { Clock, Download, Mail, Upload } from 'lucide-react';
+import ExportDropdown from '../../components/admin/ExportDropdown';
+import { Clock, Mail, Upload } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import { Link } from 'react-router-dom';
 
@@ -70,12 +71,7 @@ const AdminDashboard = () => {
             </Button>
           </Link>
           
-          <Button
-            variant="outline"
-            icon={<Download size={18} />}
-          >
-            Export Data
-          </Button>
+          <ExportDropdown variant="outline" />
         </div>
       </div>
       

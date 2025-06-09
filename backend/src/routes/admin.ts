@@ -3,6 +3,7 @@ import db from '../db/db';
 import multer from 'multer';
 import { parse } from 'csv-parse';
 import fs from 'fs';
+import { stringify } from 'csv-stringify';
 
 const router = Router();
 const upload = multer({ dest: 'uploads/' });
@@ -189,6 +190,209 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
       fs.unlinkSync(filePath);
       res.status(500).json({ success: false, errors: [err.message] });
     });
+});
+
+// Export students data endpoint
+router.get('/export/students', async (req, res) => {
+  try {
+    // Get all students data
+    const studentsResult = await db.query(`
+      SELECT 
+        student_id,
+        name,
+        email,
+        program,
+        phone,
+        address,
+        postalCode,
+        city,
+        country,
+        eligibility_status,
+        created_at
+      FROM students 
+      ORDER BY created_at DESC
+    `);
+
+    if (studentsResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No students found to export' });
+    }
+
+    // Convert to CSV
+    const csvData = studentsResult.rows.map(student => ({
+      'Student ID': student.student_id,
+      'Name': student.name,
+      'Email': student.email,
+      'Program': student.program,
+      'Phone': student.phone || '',
+      'Address': student.address || '',
+      'Postal Code': student.postalCode || '',
+      'City': student.city || '',
+      'Country': student.country || '',
+      'Eligible': student.eligibility_status ? 'Yes' : 'No',
+      'Created At': new Date(student.created_at).toLocaleString()
+    }));
+
+    // Generate CSV string
+    stringify(csvData, { header: true }, (err: Error | undefined, csvString: string) => {
+      if (err) {
+        console.error('CSV generation error:', err);
+        return res.status(500).json({ error: 'Failed to generate CSV' });
+      }
+
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="students_export_${new Date().toISOString().split('T')[0]}.csv"`);
+      
+      // Send CSV data
+      res.send(csvString);
+
+      // Log the export
+      db.query(
+        `INSERT INTO audit_logs (action, user_name, details) VALUES ($1, $2, $3)`,
+        ['EXPORT', 'admin', `Exported ${studentsResult.rows.length} students to CSV`]
+      ).catch(logError => console.error('Error logging export:', logError));
+    });
+  } catch (error) {
+    console.error('Export students error:', error);
+    res.status(500).json({ error: 'Failed to export students data' });
+  }
+});
+
+// Export registrations data endpoint
+router.get('/export/registrations', async (req, res) => {
+  try {
+    // Get all registrations with student details
+    const registrationsResult = await db.query(`
+      SELECT 
+        r.confirmation_id,
+        r.student_id,
+        s.name,
+        s.email,
+        s.program,
+        s.phone,
+        r.form_data,
+        r.created_at
+      FROM registrations r
+      JOIN students s ON r.student_id = s.student_id
+      ORDER BY r.created_at DESC
+    `);
+
+    if (registrationsResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No registrations found to export' });
+    }
+
+    // Convert to CSV with form data flattened
+    const csvData = registrationsResult.rows.map(registration => {
+      const formData = registration.form_data || {};
+      return {
+        'Confirmation ID': registration.confirmation_id,
+        'Student ID': registration.student_id,
+        'Name': registration.name,
+        'Email': registration.email,
+        'Program': registration.program,
+        'Phone': registration.phone || '',
+        'Address': formData.address || '',
+        'Postal Code': formData.postalCode || '',
+        'City': formData.city || '',
+        'Country': formData.country || '',
+        'Emergency Contact Name': formData.emergencyContact?.name || '',
+        'Emergency Contact Relationship': formData.emergencyContact?.relationship || '',
+        'Emergency Contact Phone': formData.emergencyContact?.phone || '',
+        'Guest Count': formData.guestCount || '',
+        'Special Requirements': formData.specialRequirements || '',
+        'Pronounce Name': formData.pronounceName || '',
+        'Registered At': new Date(registration.created_at).toLocaleString()
+      };
+    });
+
+    // Generate CSV string
+    stringify(csvData, { header: true }, (err: Error | undefined, csvString: string) => {
+      if (err) {
+        console.error('CSV generation error:', err);
+        return res.status(500).json({ error: 'Failed to generate CSV' });
+      }
+
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="registrations_export_${new Date().toISOString().split('T')[0]}.csv"`);
+      
+      // Send CSV data
+      res.send(csvString);
+
+      // Log the export
+      db.query(
+        `INSERT INTO audit_logs (action, user_name, details) VALUES ($1, $2, $3)`,
+        ['EXPORT', 'admin', `Exported ${registrationsResult.rows.length} registrations to CSV`]
+      ).catch(logError => console.error('Error logging export:', logError));
+    });
+  } catch (error) {
+    console.error('Export registrations error:', error);
+    res.status(500).json({ error: 'Failed to export registrations data' });
+  }
+});
+
+// Export all data endpoint (students + registrations)
+router.get('/export/all', async (req, res) => {
+  try {
+    // Get all students and registrations
+    const studentsResult = await db.query(`
+      SELECT 
+        s.student_id,
+        s.name,
+        s.email,
+        s.program,
+        s.phone,
+        s.eligibility_status,
+        r.confirmation_id,
+        r.created_at as registration_date,
+        s.created_at as student_created_at
+      FROM students s
+      LEFT JOIN registrations r ON s.student_id = r.student_id
+      ORDER BY s.created_at DESC
+    `);
+
+    if (studentsResult.rows.length === 0) {
+      return res.status(404).json({ error: 'No data found to export' });
+    }
+
+    // Convert to CSV
+    const csvData = studentsResult.rows.map(row => ({
+      'Student ID': row.student_id,
+      'Name': row.name,
+      'Email': row.email,
+      'Program': row.program,
+      'Phone': row.phone || '',
+      'Eligible': row.eligibility_status ? 'Yes' : 'No',
+      'Registration Status': row.confirmation_id ? 'Registered' : 'Not Registered',
+      'Confirmation ID': row.confirmation_id || '',
+      'Registration Date': row.registration_date ? new Date(row.registration_date).toLocaleString() : '',
+      'Student Created At': new Date(row.student_created_at).toLocaleString()
+    }));
+
+    // Generate CSV string
+    stringify(csvData, { header: true }, (err: Error | undefined, csvString: string) => {
+      if (err) {
+        console.error('CSV generation error:', err);
+        return res.status(500).json({ error: 'Failed to generate CSV' });
+      }
+
+      // Set headers for file download
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="all_data_export_${new Date().toISOString().split('T')[0]}.csv"`);
+      
+      // Send CSV data
+      res.send(csvString);
+
+      // Log the export
+      db.query(
+        `INSERT INTO audit_logs (action, user_name, details) VALUES ($1, $2, $3)`,
+        ['EXPORT', 'admin', `Exported complete dataset with ${studentsResult.rows.length} records to CSV`]
+      ).catch(logError => console.error('Error logging export:', logError));
+    });
+  } catch (error) {
+    console.error('Export all data error:', error);
+    res.status(500).json({ error: 'Failed to export all data' });
+  }
 });
 
 export default router;
