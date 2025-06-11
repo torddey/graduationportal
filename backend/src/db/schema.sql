@@ -12,7 +12,7 @@ DROP TABLE IF EXISTS students CASCADE;
 -- Enable UUID generation
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
--- Create tables with proper ownership
+-- Create tables
 
 CREATE TABLE students (
     id SERIAL PRIMARY KEY,
@@ -35,7 +35,7 @@ CREATE UNIQUE INDEX idx_students_student_id ON students (student_id);
 CREATE TABLE registrations (
     id SERIAL PRIMARY KEY,
     student_id VARCHAR(50) NOT NULL REFERENCES students(student_id),
-    confirmation_id UUID DEFAULT gen_random_uuid(),
+    confirmation_id VARCHAR(20) UNIQUE,
     form_data JSONB,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(student_id)
@@ -75,21 +75,9 @@ CREATE TABLE eligible_uploads (
     errors_count INTEGER DEFAULT 0
 );
 
--- Set ownership of tables to evans
-ALTER TABLE students OWNER TO evans;
-ALTER TABLE registrations OWNER TO evans;
-ALTER TABLE audit_logs OWNER TO evans;
-ALTER TABLE admin_users OWNER TO evans;
-ALTER TABLE otps OWNER TO evans;
-ALTER TABLE eligible_uploads OWNER TO evans;
-
--- Grant all privileges to evans
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO evans;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO evans;
-
--- Set default privileges for future objects
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO evans;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO evans;
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_download_tracking_student_id ON download_tracking (student_id);
+CREATE INDEX IF NOT EXISTS idx_download_tracking_downloaded_at ON download_tracking (downloaded_at);
 
 SELECT student_id, name FROM students;
 

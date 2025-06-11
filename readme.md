@@ -8,6 +8,7 @@ A comprehensive graduation registration system for GIMPA (Ghana Institute of Man
 - Student authentication and eligibility checking
 - Graduation ceremony registration
 - Registration confirmation and tracking
+- **Download Confirmation**: Students can download their graduation confirmation as PDF
 - Profile management
 
 ### Admin Features
@@ -19,11 +20,12 @@ A comprehensive graduation registration system for GIMPA (Ghana Institute of Man
 - Dashboard with statistics and audit logs
 - Real-time data updates via WebSocket
 
-## Export Feature
+## Export Features
 
-The admin dashboard now includes a comprehensive export functionality that allows administrators to download data in CSV format:
+### Admin Export
+The admin dashboard includes comprehensive export functionality that allows administrators to download data in CSV format:
 
-### Available Export Options
+#### Available Export Options
 
 1. **Export Students**
    - Exports all eligible students data
@@ -37,7 +39,22 @@ The admin dashboard now includes a comprehensive export functionality that allow
    - Exports complete dataset with registration status
    - Includes: Student information with registration status and confirmation details
 
-### How to Use
+### Student Download
+Registered students can download their graduation confirmation:
+
+- **Simple Download Button**: One-click download of confirmation as PDF
+- **Available on**: Confirmation page and registration page (for already registered students)
+- **Includes**: All registration details, ceremony information, and confirmation ID
+- **Format**: Professional PDF document with GIMPA branding
+
+#### How to Use (Students)
+
+1. Complete graduation registration
+2. Navigate to confirmation page or registration page
+3. Click "Download Confirmation" button
+4. PDF file will automatically download with confirmation details
+
+#### How to Use (Admins)
 
 1. Navigate to the Admin Dashboard
 2. Click the "Export Data" dropdown button
@@ -46,7 +63,7 @@ The admin dashboard now includes a comprehensive export functionality that allow
 
 ### Export Logging
 
-All export activities are automatically logged in the audit system for tracking and compliance purposes.
+All export and download activities are automatically logged in the audit system for tracking and compliance purposes.
 
 ## Installation and Setup
 
@@ -73,7 +90,23 @@ npm run dev
 1. Create a PostgreSQL database
 2. Update database connection in `backend/src/db/db.ts`
 3. Run the schema: `backend/src/db/schema.sql`
-4. Seed initial data: `npm run seed`
+4. If you have an existing database with UUID confirmation IDs, run the migration:
+   ```bash
+   cd backend
+   npm run migrate
+   ```
+5. Seed initial data: `npm run seed`
+
+## Confirmation ID Format
+
+The system now uses a custom confirmation ID format that starts with "GRAD" followed by a 9-digit code:
+- **Format**: `GRAD` + 6-digit timestamp + 3-digit random number
+- **Example**: `GRAD123456789`
+- **Benefits**: 
+  - Shorter and more readable than UUID
+  - Easy to identify as graduation-related
+  - Still unique and secure
+  - Professional appearance
 
 ## Environment Variables
 
@@ -96,18 +129,22 @@ VITE_API_URL=http://localhost:5000/api
 - `GET /api/admin/export/registrations` - Export registrations data  
 - `GET /api/admin/export/all` - Export all data
 
+### Student Download Endpoints
+- `GET /api/registration/export/:studentId` - Download student confirmation (PDF format)
+
 ### Other Endpoints
 - `POST /api/csv/upload-eligible` - Upload eligible students CSV
 - `GET /api/admin/dashboard-stats` - Get dashboard statistics
 - `GET /api/admin/audit-logs` - Get audit logs
 - `POST /api/registration/submit` - Submit graduation registration
+- `GET /api/registration/status/:studentId` - Get registration status
 
 ## Technologies Used
 
 - **Backend**: Node.js, Express, TypeScript, PostgreSQL
 - **Frontend**: React, TypeScript, Tailwind CSS, Vite
 - **Real-time**: Socket.IO
-- **File Processing**: csv-parse, csv-stringify
+- **File Processing**: csv-parse, csv-stringify, PDFKit
 - **Authentication**: JWT, bcrypt
 
 ## Contributing

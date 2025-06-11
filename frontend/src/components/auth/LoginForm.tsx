@@ -46,8 +46,9 @@ const LoginForm = () => {
       if (success) {
         toast.success('Login successful');
         localStorage.removeItem('tempUserId');
-        // Use the user object from context to determine role
-        if (user?.role === 'admin') {
+        // Get the current user from localStorage after successful verification
+        const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
+        if (currentUser.role === 'admin') {
           navigate('/admin');
         } else {
           navigate('/registration');

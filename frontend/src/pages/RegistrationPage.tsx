@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { registrationService } from '../services/registrationService';
 import RegistrationForm from '../components/registration/RegistrationForm';
+import DownloadButton from '../components/student/DownloadButton';
 import Button from '../components/ui/Button';
 import LoadingSpinner from '../components/ui/LoadingSpinner';
 import { CheckCircle } from 'lucide-react';
@@ -64,6 +65,9 @@ const RegistrationPage = () => {
               >
                 View Confirmation
               </Button>
+              {user?.studentId && (
+                <DownloadButton studentId={user.studentId} variant="outline" />
+              )}
               <Button 
                 variant="outline"
                 onClick={() => navigate('/profile')}
