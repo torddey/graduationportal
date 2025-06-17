@@ -183,7 +183,7 @@ const RegistrationForm = () => {
             <TextInput
               id="name"
               name="name"
-              label="Full Name (as it will appear on your diploma)"
+              label="Full Name (as it will appear on your certificate)"
               value={form.name}
               onChange={handleChange}
               required
