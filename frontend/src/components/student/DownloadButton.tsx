@@ -13,6 +13,11 @@ const DownloadButton = ({ studentId, variant = 'primary' }: DownloadButtonProps)
   const [isDownloading, setIsDownloading] = useState(false);
 
   const handleDownload = async () => {
+    if (!studentId) {
+      toast.error('Student ID is required to download confirmation');
+      return;
+    }
+
     setIsDownloading(true);
     const toastId = toast.loading('Preparing PDF download...');
     
@@ -21,7 +26,20 @@ const DownloadButton = ({ studentId, variant = 'primary' }: DownloadButtonProps)
       toast.success('Download Successful!', { id: toastId });
     } catch (error) {
       console.error('Download failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Download failed. Please try again.';
+      let errorMessage = 'Download failed. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('Student not found')) {
+          errorMessage = 'Student not found. Please check your student ID.';
+        } else if (error.message.includes('has not registered')) {
+          errorMessage = 'You must complete your graduation registration first.';
+        } else if (error.message.includes('Invalid response format')) {
+          errorMessage = 'Unable to generate PDF. Please contact support.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast.error(errorMessage, { id: toastId });
     } finally {
       setIsDownloading(false);
@@ -33,7 +51,7 @@ const DownloadButton = ({ studentId, variant = 'primary' }: DownloadButtonProps)
       variant={variant}
       icon={<Download size={18} />}
       onClick={handleDownload}
-      disabled={isDownloading}
+      disabled={isDownloading || !studentId}
     >
       {isDownloading ? 'Downloading PDF...' : 'Download Confirmation'}
     </Button>

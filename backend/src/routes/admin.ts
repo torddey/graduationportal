@@ -4,9 +4,191 @@ import multer from 'multer';
 import { parse } from 'csv-parse';
 import fs from 'fs';
 import { stringify } from 'csv-stringify';
+import { authenticateToken, requireAdmin } from '../middleware/auth';
 
 const router = Router();
 const upload = multer({ dest: 'uploads/' });
+
+// Public settings endpoint (no authentication required)
+router.get('/public-settings', async (req, res) => {
+  try {
+    // Check if settings table exists, create if it doesn't
+    try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS settings (
+          id SERIAL PRIMARY KEY,
+          key VARCHAR(100) UNIQUE NOT NULL,
+          value TEXT NOT NULL,
+          description TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // Insert default settings if they don't exist
+      await db.query(`
+        INSERT INTO settings (key, value, description) VALUES
+        ('registration_deadline', '2025-07-04T23:59:59', 'Registration deadline for graduation ceremony'),
+        ('gown_return_deadline', '2025-08-08T23:59:59', 'Deadline for returning graduation gowns'),
+        ('gown_collection_deadline', '2025-05-10T14:00:00', 'Deadline for collecting graduation gowns'),
+        ('ceremony_date', '2025-05-15T10:00:00', 'Date and time of graduation ceremony'),
+        ('ceremony_location', 'GIMPA Main Campus Auditorium', 'Location of graduation ceremony')
+        ON CONFLICT (key) DO NOTHING
+      `);
+    } catch (tableError) {
+      console.error('Error creating settings table:', tableError);
+      // Continue with default values if table creation fails
+    }
+
+    // Fetch settings from database
+    const settingsResult = await db.query('SELECT key, value FROM settings');
+    
+    const settings: any = {};
+    settingsResult.rows.forEach(row => {
+      settings[row.key] = row.value;
+    });
+    
+    // Return settings with defaults if not found
+    const response = {
+      registrationDeadline: settings.registration_deadline || '2025-07-04T23:59:59',
+      gownReturnDeadline: settings.gown_return_deadline || '2025-08-08T23:59:59',
+      gownCollectionDeadline: settings.gown_collection_deadline || '2025-05-10T14:00:00',
+      ceremonyDate: settings.ceremony_date || '2025-05-15T10:00:00',
+      ceremonyLocation: settings.ceremony_location || 'GIMPA Main Campus Auditorium'
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Public settings error:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// Apply authentication middleware to all admin routes
+router.use(authenticateToken);
+router.use(requireAdmin);
+
+// Settings endpoint for configurable dates
+router.get('/settings', async (req, res) => {
+  try {
+    // Fetch settings from database
+    const settingsResult = await db.query('SELECT key, value FROM settings');
+    
+    const settings: any = {};
+    settingsResult.rows.forEach(row => {
+      settings[row.key] = row.value;
+    });
+    
+    // Return settings with defaults if not found
+    const response = {
+      registrationDeadline: settings.registration_deadline || '2025-07-04T23:59:59',
+      gownReturnDeadline: settings.gown_return_deadline || '2025-08-08T23:59:59',
+      gownCollectionDeadline: settings.gown_collection_deadline || '2025-05-10T14:00:00',
+      ceremonyDate: settings.ceremony_date || '2025-05-15T10:00:00',
+      ceremonyLocation: settings.ceremony_location || 'GIMPA Main Campus Auditorium'
+    };
+    
+    res.json(response);
+  } catch (error) {
+    console.error('Settings error:', error);
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+// Save settings endpoint
+router.post('/settings', async (req, res) => {
+  try {
+    console.log('Received settings update request:', req.body);
+    
+    const { 
+      registration_deadline, 
+      ceremony_date, 
+      ceremony_location, 
+      gown_collection_deadline, 
+      gown_return_deadline 
+    } = req.body;
+
+    // Validate required fields
+    if (!registration_deadline || !ceremony_date) {
+      return res.status(400).json({ error: 'Missing required fields: registration_deadline and ceremony_date' });
+    }
+
+    // Check if settings table exists, create if it doesn't
+    try {
+      await db.query(`
+        CREATE TABLE IF NOT EXISTS settings (
+          id SERIAL PRIMARY KEY,
+          key VARCHAR(100) UNIQUE NOT NULL,
+          value TEXT NOT NULL,
+          description TEXT,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `);
+      
+      // Insert default settings if they don't exist
+      await db.query(`
+        INSERT INTO settings (key, value, description) VALUES
+        ('registration_deadline', '2025-07-04T23:59:59', 'Registration deadline for graduation ceremony'),
+        ('gown_return_deadline', '2025-08-08T23:59:59', 'Deadline for returning graduation gowns'),
+        ('gown_collection_deadline', '2025-05-10T14:00:00', 'Deadline for collecting graduation gowns'),
+        ('ceremony_date', '2025-05-15T10:00:00', 'Date and time of graduation ceremony'),
+        ('ceremony_location', 'GIMPA Main Campus Auditorium', 'Location of graduation ceremony')
+        ON CONFLICT (key) DO NOTHING
+      `);
+    } catch (tableError) {
+      console.error('Error creating settings table:', tableError);
+      throw tableError;
+    }
+
+    // Update settings in database
+    const updates = [
+      { key: 'registration_deadline', value: registration_deadline },
+      { key: 'ceremony_date', value: ceremony_date },
+      { key: 'ceremony_location', value: ceremony_location },
+      { key: 'gown_collection_deadline', value: gown_collection_deadline },
+      { key: 'gown_return_deadline', value: gown_return_deadline }
+    ];
+
+    console.log('Updating settings:', updates);
+
+    for (const update of updates) {
+      if (update.value !== undefined) {
+        try {
+          const result = await db.query(
+            'UPDATE settings SET value = $1, updated_at = CURRENT_TIMESTAMP WHERE key = $2',
+            [update.value, update.key]
+          );
+          console.log(`Updated ${update.key}:`, result.rowCount, 'rows affected');
+        } catch (updateError) {
+          console.error(`Error updating ${update.key}:`, updateError);
+          throw updateError;
+        }
+      }
+    }
+
+    // Log the settings update
+    try {
+      await db.query(
+        `INSERT INTO audit_logs (action, user_name, details)
+         VALUES ($1, $2, $3)`,
+        ['SETTINGS_UPDATE', 'admin', 'Graduation settings updated']
+      );
+    } catch (logError) {
+      console.error('Error logging settings update:', logError);
+      // Don't fail the entire request if logging fails
+    }
+
+    console.log('Settings updated successfully');
+    res.json({ success: true, message: 'Settings updated successfully' });
+  } catch (error) {
+    console.error('Save settings error:', error);
+    res.status(500).json({ 
+      error: 'Failed to save settings',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
 
 // Dashboard stats endpoint
 router.get('/dashboard-stats', async (req, res) => {
@@ -53,7 +235,7 @@ router.get('/registered-students', async (req, res) => {
 
     // Get paginated results
     const studentsResult = await db.query(
-      `SELECT r.*, s.name, s.email, s.program, s.phone 
+      `SELECT r.*, s.student_id, s.name, s.email, s.program, s.phone 
        FROM registrations r 
        JOIN students s ON r.student_id = s.student_id 
        ORDER BY r.created_at DESC 
@@ -134,8 +316,13 @@ router.get('/audit-logs', async (req, res) => {
 
 // Original upload endpoint (fixed)
 router.post('/upload-eligible', upload.single('file'), async (req, res) => {
-  if (!req.file) return res.status(400).json({ success: false, errors: ['No file uploaded'] });
+  console.log('Upload endpoint called');
+  if (!req.file) {
+    console.log('No file uploaded');
+    return res.status(400).json({ success: false, errors: ['No file uploaded'] });
+  }
 
+  console.log('File received:', req.file.originalname, 'Size:', req.file.size);
   const filePath = req.file.path;
   const students: any[] = [];
   const errors: string[] = [];
@@ -143,12 +330,15 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
   fs.createReadStream(filePath)
     .pipe(parse({ columns: true, trim: true }))
     .on('data', (row) => {
+      console.log('Parsed row:', row);
       students.push(row);
     })
     .on('end', async () => {
+      console.log('CSV parsing complete. Total students:', students.length);
       let count = 0;
       for (const student of students) {
         try {
+          console.log('Processing student:', student.student_id, student.name);
           await db.query(
             `INSERT INTO students (student_id, name, email, program, phone, eligibility_status)
              VALUES ($1, $2, $3, $4, $5, TRUE)
@@ -167,11 +357,15 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
             ]
           );
           count++;
+          console.log('Successfully processed student:', student.student_id);
         } catch (err) {
           const error = err as Error;
+          console.error('Error processing student:', student.student_id, error.message);
           errors.push(`Error processing student ${student.student_id}: ${error.message}`);
         }
       }
+      
+      console.log('Upload complete. Successfully processed:', count, 'students. Errors:', errors.length);
       
       // Log the upload
       try {
@@ -179,6 +373,7 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
           `INSERT INTO eligible_uploads (uploaded_by, file_name) VALUES ($1, $2)`,
           ['admin', req.file!.originalname]
         );
+        console.log('Upload logged to database');
       } catch (err) {
         console.error('Error logging upload:', err);
       }
@@ -187,6 +382,7 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
       res.json({ success: errors.length === 0, count, errors });
     })
     .on('error', (err) => {
+      console.error('CSV parsing error:', err);
       fs.unlinkSync(filePath);
       res.status(500).json({ success: false, errors: [err.message] });
     });
@@ -299,8 +495,8 @@ router.get('/export/registrations', async (req, res) => {
         'Emergency Contact Relationship': formData.emergencyContact?.relationship || '',
         'Emergency Contact Phone': formData.emergencyContact?.phone || '',
         'Guest Count': formData.guestCount || '',
+        'Dignitaries': formData.dignitaries || '',
         'Special Requirements': formData.specialRequirements || '',
-        'Pronounce Name': formData.pronounceName || '',
         'Registered At': new Date(registration.created_at).toLocaleString()
       };
     });

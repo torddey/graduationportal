@@ -6,6 +6,7 @@ import HomePage from './pages/HomePage';
 import LoginPage from './pages/LoginPage';
 import RegistrationPage from './pages/RegistrationPage';
 import ConfirmationPage from './pages/ConfirmationPage';
+import NoticePage from './pages/NoticePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminUpload from './pages/admin/AdminUpload';
 import AdminSettings from './pages/admin/AdminSettings';
@@ -23,6 +24,7 @@ function App() {
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/notice" element={<NoticePage />} />
           <Route path="/registration" element={
             <ProtectedRoute>
               <RegistrationPage />

@@ -40,6 +40,15 @@ const Header = () => {
               Home
             </Link>
             
+            <Link 
+              to="/notice" 
+              className={`hover:text-[#ffc425] transition ${
+                location.pathname === '/notice' ? 'text-[#ffc425] font-medium' : ''
+              }`}
+            >
+              Notice
+            </Link>
+            
             {user && (
               <Link 
                 to="/registration" 
@@ -77,6 +86,15 @@ const Header = () => {
                     >
                       Profile
                     </Link>
+                    {isAdmin && (
+                      <Link 
+                        to="/admin/settings" 
+                        className="block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100"
+                        onClick={closeMenu}
+                      >
+                        Settings
+                      </Link>
+                    )}
                     <button 
                       onClick={handleLogout}
                       className="w-full text-left px-4 py-2 text-sm text-gray-800 hover:bg-gray-100 flex items-center"
@@ -119,6 +137,16 @@ const Header = () => {
                 Home
               </Link>
               
+              <Link 
+                to="/notice" 
+                className={`hover:text-[#ffc425] transition ${
+                  location.pathname === '/notice' ? 'text-[#ffc425] font-medium' : ''
+                }`}
+                onClick={closeMenu}
+              >
+                Notice
+              </Link>
+              
               {user && (
                 <Link 
                   to="/registration" 
@@ -152,6 +180,15 @@ const Header = () => {
                   >
                     Profile
                   </Link>
+                  {isAdmin && (
+                    <Link 
+                      to="/admin/settings" 
+                      className="hover:text-[#ffc425] transition"
+                      onClick={closeMenu}
+                    >
+                      Settings
+                    </Link>
+                  )}
                   <button 
                     onClick={() => {
                       handleLogout();

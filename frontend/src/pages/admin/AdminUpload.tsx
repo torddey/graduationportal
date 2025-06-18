@@ -38,32 +38,32 @@ const AdminUpload = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">student_id</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Student_id</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Unique student identifier</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yes</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">ST12345</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">name</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Name</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Student's full name</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yes</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Jane Smith</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">email</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Email</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Student's email address</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yes</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">jane.smith@university.edu</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">program</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Degree program</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Program</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Program</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yes</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Computer Science</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">faculty</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Faculty or college</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">School</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">School or college</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yes</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Engineering</td>
                 </tr>

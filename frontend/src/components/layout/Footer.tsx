@@ -1,5 +1,5 @@
 import logo from '../../assets/logo_GIMPA.png';
-
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -24,7 +24,7 @@ const Footer = () => {
               <li><a href="/" className="text-gray-300 hover:text-[#ffc425] transition">Home</a></li>
               <li><a href="/login" className="text-gray-300 hover:text-[#ffc425] transition">Login</a></li>
               <li><a href="/registration" className="text-gray-300 hover:text-[#ffc425] transition">Registration</a></li>
-              <li><a href="#" className="text-gray-300 hover:text-[#ffc425] transition">Help & FAQ</a></li>
+              <li><Link to="/notice" className="text-gray-300 hover:text-[#ffc425] transition">Important Notices</Link></li>
             </ul>
           </div>
           

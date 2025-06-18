@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { registrationService } from '../../services/registrationService';
 import { emailService } from '../../services/emailService';
@@ -27,8 +27,8 @@ const initialState: RegistrationFormType = {
     phone: '',
   },
   guestCount: 2,
-  specialRequirements: '',
-  pronounceName: '',
+  dignitaries: 'no',
+  specialRequirements: 'none',
   attendanceConfirmed: false,
   agreeToTerms: false,
 };
@@ -96,8 +96,8 @@ const RegistrationForm = () => {
         country: form.country,
         emergencyContact: form.emergencyContact,
         guestCount: form.guestCount,
+        dignitaries: form.dignitaries,
         specialRequirements: form.specialRequirements,
-        pronounceName: form.pronounceName,
         attendanceConfirmed: form.attendanceConfirmed,
         agreeToTerms: form.agreeToTerms,
       };
@@ -313,6 +313,19 @@ const RegistrationForm = () => {
                 disabled={isSubmitting}
               />
               
+              <Select
+                id="dignitaries"
+                name="dignitaries"
+                label="Would you be inviting any dignitaries e.g Chiefs, Member of Parliaments etc.?"
+                value={form.dignitaries}
+                onChange={handleChange}
+                options={[
+                  { value: 'no', label: 'No' },
+                  { value: 'yes', label: 'Yes' }
+                ]}
+                disabled={isSubmitting}
+              />
+              
               <p className="text-sm text-gray-500 mt-2">
                 Each graduate is allowed to bring up to 4 guests to the ceremony.
                 Additional tickets may be available after the registration deadline.
@@ -329,26 +342,18 @@ const RegistrationForm = () => {
               <p className="text-gray-700">Student ID: <span className="font-medium">{form.studentId}</span></p>
             </div>
             
-            <TextInput
-              id="pronounceName"
-              name="pronounceName"
-              label="How to Pronounce Your Name"
-              placeholder="e.g., JAY-son SMITH"
-              value={form.pronounceName}
-              onChange={handleChange}
-              disabled={isSubmitting}
-              helperText="This helps ensure your name is pronounced correctly during the ceremony"
-            />
-            
-            <TextArea
+            <Select
               id="specialRequirements"
               name="specialRequirements"
               label="Special Requirements or Accessibility Needs"
-              placeholder="Please let us know if you have any accessibility requirements or special needs"
               value={form.specialRequirements}
               onChange={handleChange}
+              options={[
+                { value: 'none', label: 'None' },
+                { value: 'physical_disability', label: 'Physical disability (eg wheel chair)' },
+                { value: 'visual_impairment', label: 'Visual impairment assistance' }
+              ]}
               disabled={isSubmitting}
-              rows={3}
             />
             
             <Checkbox
@@ -363,7 +368,19 @@ const RegistrationForm = () => {
             <Checkbox
               id="agreeToTerms"
               name="agreeToTerms"
-              label="I agree to the terms and conditions of the graduation ceremony"
+              label={
+                <span>
+                  I agree to the{' '}
+                  <Link 
+                    to="/notice" 
+                    target="_blank" 
+                    className="text-blue-600 hover:text-blue-800 underline"
+                  >
+                    terms and conditions
+                  </Link>{' '}
+                  of the graduation ceremony
+                </span>
+              }
               checked={form.agreeToTerms}
               onChange={(e) => setForm({...form, agreeToTerms: e.target.checked})}
               disabled={isSubmitting}

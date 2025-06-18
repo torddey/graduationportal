@@ -2,6 +2,12 @@ import { Student } from '../types/Student';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Helper function to get auth headers
+const getAuthHeaders = (): Record<string, string> => {
+  const token = localStorage.getItem('authToken');
+  return token ? { 'Authorization': `Bearer ${token}` } : {};
+};
+
 export const adminService = {
   // Upload and process CSV of eligible students
   async uploadEligibleStudents(file: File): Promise<{ success: boolean; count: number; errors?: string[] }> {
@@ -9,8 +15,9 @@ export const adminService = {
     formData.append('file', file);
 
     try {
-      const response = await fetch(`${API_URL}/csv/upload-eligible`, {
+      const response = await fetch(`${API_URL}/admin/upload-eligible`, {
         method: 'POST',
+        headers: getAuthHeaders(),
         body: formData,
       });
 
@@ -34,7 +41,9 @@ export const adminService = {
     pending: number;
     lastUpload: string;
   }> {
-    const res = await fetch(`${API_URL}/admin/dashboard-stats`);
+    const res = await fetch(`${API_URL}/admin/dashboard-stats`, {
+      headers: getAuthHeaders(),
+    });
     if (!res.ok) throw new Error('Failed to fetch dashboard stats');
     return res.json();
   },
@@ -50,7 +59,9 @@ export const adminService = {
     }>;
     total: number;
   }> {
-    const res = await fetch(`${API_URL}/admin/audit-logs?page=${page}&limit=${limit}`);
+    const res = await fetch(`${API_URL}/admin/audit-logs?page=${page}&limit=${limit}`, {
+      headers: getAuthHeaders(),
+    });
     if (!res.ok) throw new Error('Failed to fetch audit logs');
     return res.json();
   },
@@ -60,7 +71,9 @@ export const adminService = {
     students: Student[];
     total: number;
   }> {
-    const res = await fetch(`${API_URL}/admin/registered-students?page=${page}&limit=${limit}`);
+    const res = await fetch(`${API_URL}/admin/registered-students?page=${page}&limit=${limit}`, {
+      headers: getAuthHeaders(),
+    });
     if (!res.ok) throw new Error('Failed to fetch registered students');
     return res.json();
   },
@@ -68,7 +81,9 @@ export const adminService = {
   // Export students data as CSV
   async exportStudents(): Promise<void> {
     try {
-      const response = await fetch(`${API_URL}/admin/export/students`);
+      const response = await fetch(`${API_URL}/admin/export/students`, {
+        headers: getAuthHeaders(),
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -98,7 +113,9 @@ export const adminService = {
   // Export registrations data as CSV
   async exportRegistrations(): Promise<void> {
     try {
-      const response = await fetch(`${API_URL}/admin/export/registrations`);
+      const response = await fetch(`${API_URL}/admin/export/registrations`, {
+        headers: getAuthHeaders(),
+      });
       
       if (!response.ok) {
         const errorData = await response.json();
@@ -128,7 +145,9 @@ export const adminService = {
   // Export all data as CSV
   async exportAllData(): Promise<void> {
     try {
-      const response = await fetch(`${API_URL}/admin/export/all`);
+      const response = await fetch(`${API_URL}/admin/export/all`, {
+        headers: getAuthHeaders(),
+      });
       
       if (!response.ok) {
         const errorData = await response.json();

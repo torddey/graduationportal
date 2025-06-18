@@ -1,11 +1,62 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { GraduationCap, CheckCircle, Clock, Mail } from 'lucide-react';
 import Button from '../components/ui/Button';
+import LoadingSpinner from '../components/ui/LoadingSpinner';
+
+interface TimelineDates {
+  registrationDeadline: string;
+  gownCollectionDeadline: string;
+  ceremonyDate: string;
+  ceremonyLocation: string;
+}
 
 const HomePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [timelineDates, setTimelineDates] = useState<TimelineDates>({
+    registrationDeadline: 'April 15, 2025 at 11:59 PM',
+    gownCollectionDeadline: 'May 10, 2025 at 2:00 PM',
+    ceremonyDate: 'October 15, 2025 at 10:00 AM',
+    ceremonyLocation: 'GIMPA Main Campus Auditorium'
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/admin/public-settings');
+        if (response.ok) {
+          const data = await response.json();
+          setTimelineDates({
+            registrationDeadline: new Date(data.registrationDeadline).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            }) + ' at 11:59 PM',
+            gownCollectionDeadline: new Date(data.gownCollectionDeadline || '2025-05-10T14:00:00').toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            }) + ' at 2:00 PM',
+            ceremonyDate: new Date(data.ceremonyDate).toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric'
+            }) + ' at 10:00 AM',
+            ceremonyLocation: data.ceremonyLocation || 'GIMPA Main Campus Auditorium'
+          });
+        }
+      } catch (error) {
+        console.error('Failed to fetch settings:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSettings();
+  }, []);
   
   return (
     <div className="flex flex-col min-h-[calc(100vh-14rem)]">
@@ -87,37 +138,44 @@ const HomePage = () => {
               <h3 className="text-xl font-semibold">2025 Graduation Timeline</h3>
             </div>
             
-            <div className="divide-y">
-              <div className="flex items-start p-6">
-                <div className="bg-blue-100 rounded-full p-2 mr-4">
-                  <Clock size={20} className="text-blue-600" />
+            {loading ? (
+              <div className="p-8 flex justify-center">
+                <LoadingSpinner size="md" />
+              </div>
+            ) : (
+              <div className="divide-y">
+                <div className="flex items-start p-6">
+                  <div className="bg-blue-100 rounded-full p-2 mr-4">
+                    <Clock size={20} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-lg mb-1">Registration Deadline</h4>
+                    <p className="text-gray-600">{timelineDates.registrationDeadline}</p>
+                  </div>
                 </div>
-                <div>
-                  <h4 className="font-semibold text-lg mb-1">Registration Deadline</h4>
-                  <p className="text-gray-600">April 15, 2025 at 11:59 PM</p>
+                
+                <div className="flex items-start p-6">
+                  <div className="bg-blue-100 rounded-full p-2 mr-4">
+                    <Clock size={20} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-lg mb-1">Gown Collection Deadline</h4>
+                    <p className="text-gray-600">{timelineDates.gownCollectionDeadline}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start p-6">
+                  <div className="bg-blue-100 rounded-full p-2 mr-4">
+                    <Clock size={20} className="text-blue-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-lg mb-1">Graduation Ceremony</h4>
+                    <p className="text-gray-600">{timelineDates.ceremonyDate}</p>
+                    <p className="text-sm text-gray-500 mt-1">{timelineDates.ceremonyLocation}</p>
+                  </div>
                 </div>
               </div>
-              
-              <div className="flex items-start p-6">
-                <div className="bg-blue-100 rounded-full p-2 mr-4">
-                  <Clock size={20} className="text-blue-600" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-lg mb-1">Gown Collection Deadline</h4>
-                  <p className="text-gray-600">May 10, 2025 at 2:00 PM</p>
-                </div>
-              </div>
-              
-              <div className="flex items-start p-6">
-                <div className="bg-blue-100 rounded-full p-2 mr-4">
-                  <Clock size={20} className="text-blue-600" />
-                </div>
-                <div>
-                  <h4 className="font-semibold text-lg mb-1">Graduation Ceremony</h4>
-                  <p className="text-gray-600">October 15, 2025 at 10:00 AM</p>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </section>
