@@ -57,9 +57,17 @@ const ProfilePage = () => {
                     <Mail size={18} className="text-gray-500 mr-2" />
                     <span className="text-gray-700">{user?.email}</span>
                   </div>
+                  <div className="flex items-center mb-3">
+                    <MapPin size={18} className="text-gray-500 mr-2" />
+                    <span className="text-gray-700">School: {user?.school || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-center mb-3">
+                    <MapPin size={18} className="text-gray-500 mr-2" />
+                    <span className="text-gray-700">Program: {user?.program || 'N/A'}</span>
+                  </div>
                   <div className="flex items-center">
                     <MapPin size={18} className="text-gray-500 mr-2" />
-                    <span className="text-gray-700">College of {user?.program}</span>
+                    <span className="text-gray-700">Course: {user?.course || 'N/A'}</span>
                   </div>
                 </div>
               </div>

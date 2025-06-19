@@ -58,7 +58,8 @@ export const registrationService = {
       console.log('Content-Type:', contentType);
       
       if (!contentType || !contentType.includes('application/pdf')) {
-        console.error('Invalid content type:', contentType);
+        const text = await response.text();
+        console.error('Invalid content type:', contentType, 'Response body:', text);
         throw new Error('Invalid response format. Expected PDF.');
       }
 

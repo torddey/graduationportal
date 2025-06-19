@@ -15,7 +15,8 @@ export const adminService = {
     formData.append('file', file);
 
     try {
-      const response = await fetch(`${API_URL}/admin/upload-eligible`, {
+      // Use the correct backend endpoint for eligible student uploads
+      const response = await fetch(`${API_URL}/csv/upload-eligible`, {
         method: 'POST',
         headers: getAuthHeaders(),
         body: formData,

@@ -12,8 +12,10 @@ interface UploadedData {
   student_id: string;
   name: string;
   email: string;
+  school: string;
   program: string;
-  faculty: string; 
+  course: string;
+  phone?: string;
 }
 
 // Helper function to perform bulk upsert
@@ -24,27 +26,30 @@ const bulkUpsertStudents = async (students: any[]) => {
     student.student_id,
     student.name,
     student.email,
+    student.school,
     student.program,
-    // Safely access phone, defaulting to null if not present
-    student.phone || null 
+    student.course,
+    student.phone || null
   ]).flat();
 
   // Construct the multi-value insert query
   // Adjust placeholder count based on the number of columns being inserted/updated
-  const numColumns = 5; // student_id, name, email, program, phone
+  const numColumns = 7; // student_id, name, email, school, program, course, phone
   const valuePlaceholders = students.map((_, i) => {
     const start = i * numColumns + 1;
     // Ensure the VALUES clause matches the columns and placeholders
-    return `($${start}, $${start + 1}, $${start + 2}, $${start + 3}, $${start + 4}, TRUE)`;
+    return `($${start}, $${start + 1}, $${start + 2}, $${start + 3}, $${start + 4}, $${start + 5}, $${start + 6}, TRUE)`;
   }).join(',');
 
   const query = `
-    INSERT INTO students (student_id, name, email, program, phone, eligibility_status)
+    INSERT INTO students (student_id, name, email, school, program, course, phone, eligibility_status)
     VALUES ${valuePlaceholders}
     ON CONFLICT (student_id) DO UPDATE SET
       name = EXCLUDED.name,
       email = EXCLUDED.email,
+      school = EXCLUDED.school,
       program = EXCLUDED.program,
+      course = EXCLUDED.course,
       phone = EXCLUDED.phone,
       eligibility_status = TRUE;
   `;
@@ -66,6 +71,7 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
   const errors: string[] = [];
   let fileStream: fs.ReadStream | undefined;
   let parser: any;
+  let firstRowLogged = false;
 
   // Function to clean up the temporary file
   const cleanupFile = (callback?: () => void) => {
@@ -75,32 +81,25 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
     });
   };
 
-  // Function to normalize column names (remove BOM and trim)
+  // Function to normalize column names (remove BOM, trim, lowercase, replace spaces with underscores)
   const normalizeColumnName = (name: string) => {
-    // Remove BOM and any leading/trailing whitespace
-    return name.replace(/^\uFEFF/, '').trim();
+    return name.replace(/\uFEFF/, '').trim().toLowerCase().replace(/\s+/g, '_');
   };
 
   // Function to validate and normalize student data
   const validateAndNormalizeStudent = (row: any) => {
-    // Normalize column names
-    const normalizedRow: any = {};
-    Object.keys(row).forEach(key => {
-      const normalizedKey = normalizeColumnName(key);
-      normalizedRow[normalizedKey] = row[key];
-    });
-
     // Check for required fields
-    if (!normalizedRow.student_id || !normalizedRow.name || !normalizedRow.email || !normalizedRow.program) {
+    if (!row.student_id || !row.name || !row.email || !row.school || !row.program || !row.course) {
       return null;
     }
-
     return {
-      student_id: normalizedRow.student_id.trim(),
-      name: normalizedRow.name.trim(),
-      email: normalizedRow.email.trim(),
-      program: normalizedRow.program.trim(),
-      phone: normalizedRow.phone ? normalizedRow.phone.trim() : null
+      student_id: row.student_id.trim(),
+      name: row.name.trim(),
+      email: row.email.trim(),
+      school: row.school.trim(),
+      program: row.program.trim(),
+      course: row.course.trim(),
+      phone: row.phone ? row.phone.trim() : null
     };
   };
 
@@ -168,14 +167,24 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
     fileStream.pipe(parser);
 
     parser.on('data', async (row: any) => {
-      const normalizedStudent = validateAndNormalizeStudent(row);
+      console.log('DEBUG: Entered updated CSV upload handler');
+      // Normalize all keys in the row
+      const normalizedRow: any = {};
+      Object.keys(row).forEach(key => {
+        normalizedRow[normalizeColumnName(key)] = row[key];
+      });
+      if (!firstRowLogged) {
+        console.log('DEBUG: Normalized row:', normalizedRow);
+        console.log('DEBUG: Keys of normalized row:', Object.keys(normalizedRow));
+        firstRowLogged = true;
+      }
+      const normalizedStudent = validateAndNormalizeStudent(normalizedRow);
+      console.log('DEBUG: Normalized student for DB:', normalizedStudent);
       if (!normalizedStudent) {
         errors.push(`Skipping row due to missing data: ${JSON.stringify(row)}`);
         return;
       }
-
       studentsBatch.push(normalizedStudent);
-
       if (studentsBatch.length >= batchSize) {
         parser.pause(); // Pause parsing while processing batch
         await processBatch(studentsBatch);
@@ -217,53 +226,53 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
   }
 });
 
-router.post('/upload-csv', async (req, res) => {
-  try {
-    const uploadedData: UploadedData[] = []; // Explicitly typed
+// router.post('/upload-csv', async (req, res) => {
+//   try {
+//     const uploadedData: UploadedData[] = []; // Explicitly typed
+//
+//     // Assume parsedRows is the result of parsing the CSV file
+//     const parsedRows = [
+//       ['ST12345', 'Jane Smith', 'jane.smith@university.edu', 'Computer Science', 'Engineering'],
+//       ['ST67890', 'John Doe', 'john.doe@university.edu', 'Information Technology', 'Engineering'],
+//     ];
+//
+//     for (const row of parsedRows) {
+//       uploadedData.push({
+//         student_id: row[0],
+//         name: row[1],
+//         email: row[2],
+//         school: row[3],
+//         program: row[4],
+//         course: row[5], 
+//       });
+//
+//       await db.query(
+//         `INSERT INTO students (student_id, name, email, school, program, course) VALUES ($1, $2, $3, $4, $5, $6)`,
+//         [row[0], row[1], row[2], row[3], row[4], row[5]]
+//       );
+//     }
+//
+//     // Emit an event to notify the frontend
+//     io.emit('csv-upload-complete', { success: true, data: uploadedData });
+//     console.log('Emitted csv-upload-complete event:', uploadedData);
+//
+//     res.json({ success: true, message: 'CSV uploaded and processed successfully' });
+//   } catch (err) {
+//     console.error('CSV upload failed:', err);
+//     res.status(500).json({ error: 'Failed to upload CSV' });
+//   }
+// });
 
-    // Assume parsedRows is the result of parsing the CSV file
-    const parsedRows = [
-      ['ST12345', 'Jane Smith', 'jane.smith@university.edu', 'Computer Science', 'Engineering'],
-      ['ST67890', 'John Doe', 'john.doe@university.edu', 'Information Technology', 'Engineering'],
-    ];
-
-    for (const row of parsedRows) {
-      uploadedData.push({
-        student_id: row[0],
-        name: row[1],
-        email: row[2],
-        program: row[3],
-        faculty: row[4], 
-      });
-
-      await db.query(
-        `INSERT INTO students (student_id, name, email, program, faculty) VALUES ($1, $2, $3, $4, $5)`,
-        [row[0], row[1], row[2], row[3], row[4]]
-      );
-    }
-
-    // Emit an event to notify the frontend
-    io.emit('csv-upload-complete', { success: true, data: uploadedData });
-    console.log('Emitted csv-upload-complete event:', uploadedData);
-
-    res.json({ success: true, message: 'CSV uploaded and processed successfully' });
-  } catch (err) {
-    console.error('CSV upload failed:', err);
-    res.status(500).json({ error: 'Failed to upload CSV' });
-  }
-});
-
-// POST /api/csv/upload - Handle CSV file upload
-router.post('/upload', upload.single('file'), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: 'No file uploaded' });
-    }
-    // Process CSV here...
-    res.status(200).json({ success: true, count: 0, errors: [] });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to upload file' });
-  }
-});
+// router.post('/upload', upload.single('file'), async (req, res) => {
+//   try {
+//     if (!req.file) {
+//       return res.status(400).json({ error: 'No file uploaded' });
+//     }
+//     // Process CSV here...
+//     res.status(200).json({ success: true, count: 0, errors: [] });
+//   } catch (error) {
+//     res.status(500).json({ error: 'Failed to upload file' });
+//   }
+// });
 
 export default router;

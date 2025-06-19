@@ -67,7 +67,13 @@ const RegisteredStudentsTable = () => {
                 Name
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                School
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Program
+              </th>
+              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Course
               </th>
               <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Email
@@ -87,7 +93,13 @@ const RegisteredStudentsTable = () => {
                   {student.name}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {student.school}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {student.program}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {student.course}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   <a href={`mailto:${student.email}`} className="text-blue-600 hover:text-blue-800">

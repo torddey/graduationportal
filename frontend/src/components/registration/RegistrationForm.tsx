@@ -338,7 +338,9 @@ const RegistrationForm = () => {
           <div className="space-y-6">
             <div className="bg-gray-50 p-4 rounded-md border border-gray-200">
               <h3 className="font-semibold text-gray-800 mb-2">Program Information</h3>
-              <p className="text-gray-700">Graduating from: <span className="font-medium">{form.program}</span></p>
+              <p className="text-gray-700">School: <span className="font-medium">{user?.school || 'N/A'}</span></p>
+              <p className="text-gray-700">Program: <span className="font-medium">{user?.program || 'N/A'}</span></p>
+              <p className="text-gray-700">Course: <span className="font-medium">{user?.course || 'N/A'}</span></p>
               <p className="text-gray-700">Student ID: <span className="font-medium">{form.studentId}</span></p>
             </div>
             

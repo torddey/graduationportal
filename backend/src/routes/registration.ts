@@ -50,6 +50,17 @@ router.post('/submit', async (req, res) => {
       });
     }
 
+    // Fetch school, program, and course from students table
+    const studentDetails = await db.query('SELECT school, program, course FROM students WHERE student_id = $1', [studentId]);
+    if (studentDetails.rows.length === 0) {
+      logger.warn(`Registration attempt for non-existent student: ${studentId}`, { category: 'Registration' });
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Student not found' 
+      });
+    }
+    const { school, program, course } = studentDetails.rows[0];
+
     // If all checks pass, proceed with registration
     // Generate custom confirmation ID starting with GIMPA
     const generateConfirmationId = () => {
@@ -61,10 +72,10 @@ router.post('/submit', async (req, res) => {
     const confirmationId = generateConfirmationId();
 
     const result = await db.query(
-      `INSERT INTO registrations (student_id, form_data, confirmation_id)
-       VALUES ($1, $2, $3)
+      `INSERT INTO registrations (student_id, school, program, course, form_data, confirmation_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING confirmation_id`,
-      [studentId, JSON.stringify(formData), confirmationId]
+      [studentId, school, program, course, JSON.stringify(formData), confirmationId]
     );
 
     const finalConfirmationId = result.rows[0].confirmation_id;

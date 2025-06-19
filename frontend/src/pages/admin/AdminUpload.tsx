@@ -56,16 +56,22 @@ const AdminUpload = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">jane.smith@university.edu</td>
                 </tr>
                 <tr>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">School</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">School or college</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yes</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Engineering</td>
+                </tr>
+                <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Program</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Program</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yes</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Computer Science</td>
                 </tr>
                 <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">School</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">School or college</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">Course</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Course</td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Yes</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Engineering</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">CS101</td>
                 </tr>
                 {/* <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">gpa</td>

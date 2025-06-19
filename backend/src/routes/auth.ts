@@ -79,7 +79,7 @@ router.post('/verify-otp', async (req, res) => {
 
     if (role === 'student' && studentId) {
       userForFrontend.studentId = studentId;
-      const studentDetailsRes = await db.query('SELECT phone, address, postalCode, city, country, program FROM students WHERE student_id = $1', [studentId]);
+      const studentDetailsRes = await db.query('SELECT phone, address, postalCode, city, country, school, program, course FROM students WHERE student_id = $1', [studentId]);
       if (studentDetailsRes.rows.length > 0) {
         const details = studentDetailsRes.rows[0];
         userForFrontend.phone = details.phone;
@@ -87,7 +87,9 @@ router.post('/verify-otp', async (req, res) => {
         userForFrontend.postalCode = details.postalCode;
         userForFrontend.city = details.city;
         userForFrontend.country = details.country;
+        userForFrontend.school = details.school;
         userForFrontend.program = details.program;
+        userForFrontend.course = details.course;
       }
     }
 

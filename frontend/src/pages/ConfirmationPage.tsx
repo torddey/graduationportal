@@ -155,10 +155,24 @@ const ConfirmationPage = () => {
                 </div>
               </div>
               <div className="flex items-start">
+                <MapPin className="mr-2 text-gray-500 mt-1" size={20} />
+                <div>
+                  <p className="font-medium text-gray-700">School</p>
+                  <p className="text-gray-800">{user?.school || 'N/A'}</p>
+                </div>
+              </div>
+              <div className="flex items-start">
                 <Users className="mr-2 text-gray-500 mt-1" size={20} />
                 <div>
                   <p className="font-medium text-gray-700">Program</p>
-                  <p className="text-gray-800">{user?.program || 'Computer Science'}</p>
+                  <p className="text-gray-800">{user?.program || 'N/A'}</p>
+                </div>
+              </div>
+              <div className="flex items-start">
+                <User className="mr-2 text-gray-500 mt-1" size={20} />
+                <div>
+                  <p className="font-medium text-gray-700">Course</p>
+                  <p className="text-gray-800">{user?.course || 'N/A'}</p>
                 </div>
               </div>
               <div className="flex items-start">
