@@ -140,7 +140,7 @@ const ProfilePage = () => {
                   <div className="flex">
                     <div className="ml-3">
                       <p className="text-sm text-green-700">
-                        <span className="font-medium">Registration Complete!</span> You are registered for the 2025 graduation ceremony.
+                        <span className="font-medium">Registration Complete!</span> You are registered for the graduation ceremony.
                       </p>
                     </div>
                   </div>

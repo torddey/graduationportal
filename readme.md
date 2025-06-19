@@ -1,159 +1,284 @@
 # Graduation Portal
 
-A comprehensive graduation registration system for GIMPA (Ghana Institute of Management and Public Administration).
+A comprehensive graduation registration and management system for GIMPA (Ghana Institute of Management and Public Administration).
+
+---
+
+## Table of Contents
+- [Features](#features)
+- [User Stories](#user-stories)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Database Schema](#database-schema)
+- [Setup & Installation](#setup--installation)
+- [Scripts](#scripts)
+- [Environment Variables](#environment-variables)
+- [API Endpoints](#api-endpoints)
+- [Frontend Overview](#frontend-overview)
+- [Security Notes](#security-notes)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
 
 ## Features
 
-### Student Features
-- Student authentication and eligibility checking
-- Graduation ceremony registration
-- Registration confirmation and tracking
-- **Download Confirmation**: Students can download their graduation confirmation as PDF
+### Student
+- Secure authentication (OTP-based)
+- Eligibility checking
+- Graduation registration form
+- Download graduation confirmation as PDF
 - Profile management
 
-### Admin Features
-- **CSV Upload**: Upload eligible students via CSV files
-- **Export Data**: Export various datasets as CSV files
-  - Export Students: All eligible students data
-  - Export Registrations: All graduation registrations with form details
-  - Export All Data: Complete dataset with registration status
-- Dashboard with statistics and audit logs
-- Real-time data updates via WebSocket
+### Admin
+- Upload eligible students via CSV
+- Export students, registrations, or all data as CSV
+- Dashboard with statistics and real-time updates
+- Audit logs for sensitive actions (exports, downloads, settings)
+- Manage ceremony and registration settings
 
-## Export Features
+### General
+- Real-time updates via WebSocket
+- Professional PDF generation (confirmation)
+- Audit logging for compliance
 
-### Admin Export
-The admin dashboard includes comprehensive export functionality that allows administrators to download data in CSV format:
+---
 
-#### Available Export Options
+## User Stories
 
-1. **Export Students**
-   - Exports all eligible students data
-   - Includes: Student ID, Name, Email, Program, Phone, Address, Eligibility Status, Created Date
+### As a Student
+- I want to log in securely using my student ID and OTP so that I can access the graduation portal.
+- I want to check if I am eligible to register for graduation so that I know if I can participate in the ceremony.
+- I want to fill out a graduation registration form so that my details are recorded for the ceremony.
+- I want to download my graduation confirmation as a PDF so that I have official proof of my registration.
+- I want to view and update my profile information so that my contact details are always correct.
 
-2. **Export Registrations**
-   - Exports all graduation registrations with detailed form data
-   - Includes: Confirmation ID, Student details, Contact information, Emergency contacts, Guest count, Special requirements
+### As an Admin
+- I want to log in securely to the admin dashboard so that I can manage the graduation process.
+- I want to upload a CSV file of eligible students so that only qualified students can register.
+- I want to export lists of students and registrations as CSV files so that I can analyze or archive the data.
+- I want to view real-time statistics and analytics on the dashboard so that I can monitor registration progress.
+- I want to review audit logs so that I can track important actions and ensure compliance.
+- I want to update ceremony and registration settings so that deadlines and event details are always current.
 
-3. **Export All Data**
-   - Exports complete dataset with registration status
-   - Includes: Student information with registration status and confirmation details
+### As a System User (General)
+- I want all my actions (such as downloads and exports) to be logged so that there is a record for security and compliance.
+- I want the system to be fast and responsive, with real-time updates, so that I always see the latest information.
 
-### Student Download
-Registered students can download their graduation confirmation:
+---
 
-- **Simple Download Button**: One-click download of confirmation as PDF
-- **Available on**: Confirmation page and registration page (for already registered students)
-- **Includes**: All registration details, ceremony information, and confirmation ID
-- **Format**: Professional PDF document with GIMPA branding
+## Tech Stack
 
-#### How to Use (Students)
+- **Backend:** Node.js, Express, TypeScript, PostgreSQL
+- **Frontend:** React, TypeScript, Vite, Tailwind CSS
+- **Real-time:** Socket.IO
+- **File Processing:** csv-parse, csv-stringify, PDFKit
+- **Authentication:** JWT, bcrypt, OTP
 
-1. Complete graduation registration
-2. Navigate to confirmation page or registration page
-3. Click "Download Confirmation" button
-4. PDF file will automatically download with confirmation details
+---
 
-#### How to Use (Admins)
+## Project Structure
 
-1. Navigate to the Admin Dashboard
-2. Click the "Export Data" dropdown button
-3. Select the desired export type
-4. The CSV file will automatically download with a timestamped filename
+```
+Graduation/
+  backend/
+    src/
+      db/           # Database schema, migrations, seed scripts
+      middleware/    # Express middleware (auth)
+      routes/        # API endpoints (admin, registration, csv, auth, ...)
+      types/         # TypeScript types
+      utils/         # Logger utility
+    migrations/      # SQL migration scripts
+    uploads/         # Uploaded CSV files
+    package.json     # Backend dependencies & scripts
+    SETUP.md         # Backend setup guide
+  frontend/
+    src/
+      components/    # React components (admin, auth, layout, student, ui)
+      contexts/      # React context providers (AuthContext)
+      hooks/         # Custom React hooks (useSocket)
+      pages/         # Main and admin pages
+      services/      # API service wrappers
+      types/         # TypeScript types
+      utils/         # Utility functions (socket monitor)
+    package.json     # Frontend dependencies & scripts
+    index.html       # App entry point
+  README.md          # Project documentation
+```
 
-### Export Logging
+---
 
-All export and download activities are automatically logged in the audit system for tracking and compliance purposes.
+## Database Schema
 
-## Installation and Setup
+- **students**: Student info, eligibility, contact
+- **registrations**: Graduation registration, confirmation ID, form data
+- **audit_logs**: Action logs (exports, downloads, settings changes)
+- **admin_users**: Admin credentials
+- **otps**: One-time passwords for student login
+- **eligible_uploads**: CSV upload tracking
+- **settings**: Ceremony and registration settings
+
+**Confirmation ID Format:**
+- `GIMPA` + 6-digit timestamp + 3-digit random (e.g., `GIMPA123456789`)
+- Short, readable, unique, and professional
+
+---
+
+## Setup & Installation
 
 ### Prerequisites
-- Node.js (v16 or higher)
-- PostgreSQL database
-- npm or yarn package manager
+- Node.js (v18+ recommended)
+- PostgreSQL
+- npm or yarn
 
-### Backend Setup
-```bash
+### 1. Clone the Repository
+```sh
+git clone <repo-url>
+cd Graduation
+```
+
+### 2. Backend Setup
+```sh
 cd backend
 npm install
+# Create .env (see below)
 npm run dev
 ```
 
-### Frontend Setup
-```bash
+### 3. Frontend Setup
+```sh
 cd frontend
 npm install
+# Create .env (see below)
 npm run dev
 ```
 
-### Database Setup
-1. Create a PostgreSQL database
-2. Update database connection in `backend/src/db/db.ts`
-3. Run the schema: `backend/src/db/schema.sql`
-4. If you have an existing database with UUID confirmation IDs, run the migration:
-   ```bash
-   cd backend
-   npm run migrate
-   ```
-5. Seed initial data: `npm run seed`
+### 4. Database Setup
+- Create a PostgreSQL database (e.g., `graduation_db`)
+- Update connection string in `backend/.env`
+- Apply schema:
+  ```sh
+  psql -U <user> -d graduation_db -f backend/src/db/schema.sql
+  ```
+- Run migration (if needed):
+  ```sh
+  cd backend
+  npm run migrate
+  ```
+- Seed initial data:
+  ```sh
+  npm run seed
+  ```
 
-## Confirmation ID Format
+---
 
-The system now uses a custom confirmation ID format that starts with "GRAD" followed by a 9-digit code:
-- **Format**: `GRAD` + 6-digit timestamp + 3-digit random number
-- **Example**: `GRAD123456789`
-- **Benefits**: 
-  - Shorter and more readable than UUID
-  - Easy to identify as graduation-related
-  - Still unique and secure
-  - Professional appearance
+## Scripts
+
+### Backend (`backend/package.json`)
+- `dev`: Start backend in dev mode (TypeScript)
+- `build`: Compile TypeScript
+- `start`: Run compiled backend
+- `seed`: Seed database with initial data
+- `migrate`: Run confirmation ID migration
+
+### Frontend (`frontend/package.json`)
+- `dev`: Start frontend in dev mode
+- `build`: Build frontend for production
+- `lint`: Lint code
+- `preview`: Preview production build
+
+---
 
 ## Environment Variables
 
-### Backend (.env)
+### Backend (`backend/.env`)
 ```
 DATABASE_URL=postgresql://username:password@localhost:5432/graduation_db
 JWT_SECRET=your_jwt_secret
 PORT=5000
+CORS_ORIGIN=http://localhost:5173
 ```
 
-### Frontend (.env)
+### Frontend (`frontend/.env`)
 ```
 VITE_API_URL=http://localhost:5000/api
 ```
 
+---
+
 ## API Endpoints
 
-### Admin Export Endpoints
-- `GET /api/admin/export/students` - Export students data
-- `GET /api/admin/export/registrations` - Export registrations data  
-- `GET /api/admin/export/all` - Export all data
+### Admin
+- `GET /api/admin/export/students` — Export all students (CSV)
+- `GET /api/admin/export/registrations` — Export all registrations (CSV)
+- `GET /api/admin/export/all` — Export all data (CSV)
+- `GET /api/admin/dashboard-stats` — Dashboard statistics
+- `GET /api/admin/audit-logs` — Audit logs
+- `GET /api/admin/settings` — Get ceremony/registration settings
+- `POST /api/admin/settings` — Update settings
 
-### Student Download Endpoints
-- `GET /api/registration/export/:studentId` - Download student confirmation (PDF format)
+### Student
+- `POST /api/registration/submit` — Submit graduation registration
+- `GET /api/registration/status/:studentId` — Get registration status
+- `GET /api/registration/export/:studentId` — Download confirmation (PDF)
 
-### Other Endpoints
-- `POST /api/csv/upload-eligible` - Upload eligible students CSV
-- `GET /api/admin/dashboard-stats` - Get dashboard statistics
-- `GET /api/admin/audit-logs` - Get audit logs
-- `POST /api/registration/submit` - Submit graduation registration
-- `GET /api/registration/status/:studentId` - Get registration status
+### CSV
+- `POST /api/csv/upload-eligible` — Upload eligible students (CSV)
 
-## Technologies Used
+### Auth
+- `POST /api/auth/login` — Login (admin/student)
+- `POST /api/auth/verify-otp` — Verify OTP (student)
 
-- **Backend**: Node.js, Express, TypeScript, PostgreSQL
-- **Frontend**: React, TypeScript, Tailwind CSS, Vite
-- **Real-time**: Socket.IO
-- **File Processing**: csv-parse, csv-stringify, PDFKit
-- **Authentication**: JWT, bcrypt
+---
+
+## Frontend Overview
+
+### Main Pages (`src/pages/`)
+- `HomePage`: Landing page
+- `LoginPage`: Student/admin login
+- `RegistrationPage`: Student registration
+- `ConfirmationPage`: Registration confirmation & PDF download
+- `ProfilePage`: Student profile
+- `NoticePage`: Notices/alerts
+- `NotFoundPage`: 404
+- `admin/AdminDashboard`: Admin dashboard
+- `admin/AdminAnalytics`: Analytics & stats
+- `admin/AdminUpload`: CSV upload
+- `admin/AdminSettings`: Ceremony/settings management
+
+### Key Components
+- `admin/`: DashboardStats, ExportDropdown, CsvUploader, AuditLogTable, RegisteredStudentsTable
+- `auth/`: LoginForm, AdminRoute, ProtectedRoute
+- `layout/`: Header, Footer
+- `student/`: DownloadButton
+- `ui/`: Button, Checkbox, Select, LoadingSpinner, ConnectionStatus, TextInput, TextArea
+
+### Services & Utilities
+- `services/`: API wrappers (auth, registration, admin, email, eligibility)
+- `contexts/`: AuthContext for global auth state
+- `hooks/`: useSocket for real-time updates
+- `utils/`: socketMonitor for connection health
+- `types/`: TypeScript types for Student, RegistrationForm, User
+
+---
+
+## Security Notes
+- **JWT**: Used for authentication, stored in localStorage (frontend)
+- **OTP**: One-time passwords for student login, never stored on frontend
+- **Audit Logs**: All exports, downloads, and settings changes are logged
+- **Environment**: Never commit `.env` files; use strong secrets and rotate regularly
+- **CORS**: Configurable via backend `.env`
+
+---
 
 ## Contributing
-
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
 4. Add tests if applicable
 5. Submit a pull request
+
+---
 
 ## License
 
@@ -161,114 +286,5 @@ This project is licensed under the MIT License.
 
 ---
 
-## Tech Stack
-
-- **Frontend:** React, TypeScript, Vite
-- **Backend:** Node.js, Express, TypeScript
-- **Database:** PostgreSQL
-
----
-
-## Project Structure
-
-```
-backend/
-  src/
-    db/                # Database schema and seed scripts
-    middleware/        # Express middleware (e.g., JWT auth)
-    routes/            # Express route handlers (auth, registration, admin)
-    ...
-  .env                 # Backend environment variables
-
-frontend/
-  src/
-    services/          # API service wrappers (auth, registration, admin)
-    contexts/          # React context providers (AuthContext)
-    components/        # React components
-    pages/             # Page components (Login, Registration, Admin)
-    ...
-  .env                 # Frontend environment variables
-```
-
----
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v18+ recommended)
-- PostgreSQL
-
-### 1. Clone the Repository
-
-```sh
-git clone https://github.com/torddey/graduation-portal.git
-cd graduation
-```
-
-### 2. Setup the Database
-
-- Create a PostgreSQL database (e.g., `graduation_db`).
-- Create a user (e.g., `myuser`) with a password and grant privileges.
-- Apply the schema:
-
-```sh
-psql -U myusername -d graduation_db -f backend/src/db/schema.sql
-```
-
-- (Optional) Seed the database:
-
-```sh
-cd backend
-npm install
-npm run seed
-```
-
-### 3. Configure Environment Variables
-
-#### Backend (`backend/.env`)
-```
-DATABASE_URL=postgresql://yourusername:yourpassword@localhost:5432/graduation_db
-PORT=5000
-JWT_SECRET=your_jwt_secret
-```
-
-#### Frontend (`frontend/.env`)
-```
-VITE_API_URL=http://localhost:5000/api
-```
-
-### 4. Start the Backend
-
-```sh
-cd backend
-npm install
-npm run dev
-```
-
-### 5. Start the Frontend
-
-```sh
-cd frontend
-npm install
-npm run dev
-```
-
----
-
-## Usage
-
-- Visit [http://localhost:5173](http://localhost:5173) to access the portal.
-- Students can log in with their student ID and OTP.
-- Admins can log in via the admin dashboard for management features.
-
----
-
-## Development Notes
-
-- **OTP Handling:** OTPs are generated and validated on the backend only. The frontend never stores OTPs.
-- **JWT:** Tokens are stored in localStorage after successful login.
-- **Database:** All tables and constraints are defined in `backend/src/db/schema.sql`.
-
----
-
+## Author
+Evans Ampofo Torddey
