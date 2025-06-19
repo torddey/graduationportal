@@ -121,7 +121,7 @@ const HomePage = () => {
               </div>
               <h3 className="text-xl font-semibold mb-3">Receive Confirmation</h3>
               <p className="text-gray-600">
-                Get your confirmation email with all the details you need for the graduation day.
+                Receive confirmation with all the details you need for the graduation day.
               </p>
             </div>
           </div>
@@ -135,7 +135,7 @@ const HomePage = () => {
           
           <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
             <div className="bg-[#1a365d] text-white py-3 px-6">
-              <h3 className="text-xl font-semibold">2025 Graduation Timeline</h3>
+              <h3 className="text-xl font-semibold">Graduation Timeline</h3>
             </div>
             
             {loading ? (

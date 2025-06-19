@@ -5,6 +5,7 @@ import { parse } from 'csv-parse';
 import fs from 'fs';
 import { stringify } from 'csv-stringify';
 import { authenticateToken, requireAdmin } from '../middleware/auth';
+import { Parser as Json2csvParser } from 'json2csv';
 
 const router = Router();
 const upload = multer({ dest: 'uploads/' });
@@ -592,6 +593,133 @@ router.get('/export/all', async (req, res) => {
   } catch (error) {
     console.error('Export all data error:', error);
     res.status(500).json({ error: 'Failed to export all data' });
+  }
+});
+
+// --- Analytics Endpoints for Registered Students ---
+
+// Registered students by school
+router.get('/analytics/by-school', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT s.school, COUNT(*) as count
+       FROM registrations r
+       JOIN students s ON r.student_id = s.student_id
+       GROUP BY s.school
+       ORDER BY count DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Analytics by school error:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics by school' });
+  }
+});
+
+// Registered students by program
+router.get('/analytics/by-program', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT s.program, COUNT(*) as count
+       FROM registrations r
+       JOIN students s ON r.student_id = s.student_id
+       GROUP BY s.program
+       ORDER BY count DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Analytics by program error:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics by program' });
+  }
+});
+
+// Registered students by course
+router.get('/analytics/by-course', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT s.course, COUNT(*) as count
+       FROM registrations r
+       JOIN students s ON r.student_id = s.student_id
+       GROUP BY s.course
+       ORDER BY count DESC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Analytics by course error:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics by course' });
+  }
+});
+
+// Registration trends over time (by day)
+router.get('/analytics/registrations-over-time', async (req, res) => {
+  try {
+    const result = await db.query(
+      `SELECT DATE(r.created_at) as date, COUNT(*) as count
+       FROM registrations r
+       GROUP BY DATE(r.created_at)
+       ORDER BY date ASC`
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Analytics registrations over time error:', error);
+    res.status(500).json({ error: 'Failed to fetch registration trends' });
+  }
+});
+
+// Export analytics as CSV
+router.get('/analytics/export-csv', async (req, res) => {
+  try {
+    // By school
+    const bySchool = await db.query(
+      `SELECT s.school, COUNT(*) as count
+       FROM registrations r
+       JOIN students s ON r.student_id = s.student_id
+       GROUP BY s.school
+       ORDER BY count DESC`
+    );
+    // By program
+    const byProgram = await db.query(
+      `SELECT s.program, COUNT(*) as count
+       FROM registrations r
+       JOIN students s ON r.student_id = s.student_id
+       GROUP BY s.program
+       ORDER BY count DESC`
+    );
+    // By course
+    const byCourse = await db.query(
+      `SELECT s.course, COUNT(*) as count
+       FROM registrations r
+       JOIN students s ON r.student_id = s.student_id
+       GROUP BY s.course
+       ORDER BY count DESC`
+    );
+    // Over time
+    const overTime = await db.query(
+      `SELECT DATE(r.created_at) as date, COUNT(*) as count
+       FROM registrations r
+       GROUP BY DATE(r.created_at)
+       ORDER BY date ASC`
+    );
+
+    // Prepare CSV sections
+    const csvSections: string[] = [];
+    const json2csv = new Json2csvParser({ header: true });
+    csvSections.push('Registered Students by School');
+    csvSections.push(json2csv.parse(bySchool.rows));
+    csvSections.push('\nRegistered Students by Program');
+    csvSections.push(json2csv.parse(byProgram.rows));
+    csvSections.push('\nRegistered Students by Course');
+    csvSections.push(json2csv.parse(byCourse.rows));
+    csvSections.push('\nRegistrations Over Time');
+    csvSections.push(json2csv.parse(overTime.rows));
+
+    const csvString = csvSections.join('\n\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="analytics_export_${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send(csvString);
+  } catch (error) {
+    console.error('Export analytics CSV error:', error);
+    res.status(500).json({ error: 'Failed to export analytics as CSV' });
   }
 });
 

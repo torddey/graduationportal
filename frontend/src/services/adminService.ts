@@ -173,5 +173,64 @@ export const adminService = {
       console.error('Error exporting all data:', error);
       throw error;
     }
+  },
+
+  // --- Analytics ---
+  async getAnalyticsBySchool(): Promise<Array<{ school: string; count: number }>> {
+    const res = await fetch(`${API_URL}/admin/analytics/by-school`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to fetch analytics by school');
+    return res.json();
+  },
+
+  async getAnalyticsByProgram(): Promise<Array<{ program: string; count: number }>> {
+    const res = await fetch(`${API_URL}/admin/analytics/by-program`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to fetch analytics by program');
+    return res.json();
+  },
+
+  async getAnalyticsByCourse(): Promise<Array<{ course: string; count: number }>> {
+    const res = await fetch(`${API_URL}/admin/analytics/by-course`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to fetch analytics by course');
+    return res.json();
+  },
+
+  async getRegistrationsOverTime(): Promise<Array<{ date: string; count: number }>> {
+    const res = await fetch(`${API_URL}/admin/analytics/registrations-over-time`, {
+      headers: getAuthHeaders(),
+    });
+    if (!res.ok) throw new Error('Failed to fetch registration trends');
+    return res.json();
+  },
+
+  async exportAnalyticsCsv(): Promise<void> {
+    try {
+      const response = await fetch(`${API_URL}/admin/analytics/export-csv`, {
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+      }
+      const contentDisposition = response.headers.get('Content-Disposition');
+      const filename = contentDisposition?.split('filename=')[1]?.replace(/"/g, '') || 'analytics_export.csv';
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting analytics:', error);
+      throw error;
+    }
   }
 };

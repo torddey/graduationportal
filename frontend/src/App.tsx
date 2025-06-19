@@ -14,6 +14,7 @@ import ProfilePage from './pages/ProfilePage';
 import NotFoundPage from './pages/NotFoundPage';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import AdminRoute from './components/auth/AdminRoute';
+import AdminAnalytics from './pages/admin/AdminAnalytics';
 
 function App() {
   return (
@@ -53,6 +54,11 @@ function App() {
           <Route path="/admin/settings" element={
             <AdminRoute>
               <AdminSettings />
+            </AdminRoute>
+          } />
+          <Route path="/admin/analytics" element={
+            <AdminRoute>
+              <AdminAnalytics />
             </AdminRoute>
           } />
           <Route path="*" element={<NotFoundPage />} />

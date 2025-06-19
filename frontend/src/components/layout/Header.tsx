@@ -64,10 +64,20 @@ const Header = () => {
               <Link 
                 to="/admin" 
                 className={`hover:text-[#ffc425] transition ${
-                  location.pathname.startsWith('/admin') ? 'text-[#ffc425] font-medium' : ''
+                  location.pathname.startsWith('/admin') && !location.pathname.startsWith('/admin/analytics') ? 'text-[#ffc425] font-medium' : ''
                 }`}
               >
                 Admin
+              </Link>
+            )}
+            {isAdmin && (
+              <Link 
+                to="/admin/analytics" 
+                className={`hover:text-[#ffc425] transition ${
+                  location.pathname.startsWith('/admin/analytics') ? 'text-[#ffc425] font-medium' : ''
+                }`}
+              >
+                Analytics
               </Link>
             )}
             
@@ -163,11 +173,22 @@ const Header = () => {
                 <Link 
                   to="/admin" 
                   className={`hover:text-[#ffc425] transition ${
-                    location.pathname.startsWith('/admin') ? 'text-[#ffc425] font-medium' : ''
+                    location.pathname.startsWith('/admin') && !location.pathname.startsWith('/admin/analytics') ? 'text-[#ffc425] font-medium' : ''
                   }`}
                   onClick={closeMenu}
                 >
                   Admin
+                </Link>
+              )}
+              {isAdmin && (
+                <Link 
+                  to="/admin/analytics" 
+                  className={`hover:text-[#ffc425] transition ${
+                    location.pathname.startsWith('/admin/analytics') ? 'text-[#ffc425] font-medium' : ''
+                  }`}
+                  onClick={closeMenu}
+                >
+                  Analytics
                 </Link>
               )}
               
