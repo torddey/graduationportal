@@ -38,9 +38,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (userData) {
           setUser(userData);
           setIsAdmin(userData.role === 'admin');
+        } else {
+          // If no user data is returned but no error was thrown (e.g., no token), ensure logged out state
+          logout();
         }
       } catch (error) {
         console.error('Failed to restore authentication state:', error);
+        // If an error is caught (e.g., invalid token), logout the user
+        logout();
       } finally {
         setLoading(false);
       }

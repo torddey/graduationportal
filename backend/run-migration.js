@@ -1,6 +1,7 @@
 const { Pool } = require('pg');
 const fs = require('fs');
 const path = require('path');
+const { Client } = require('pg');
 require('dotenv').config();
 
 // Database configuration from environment variables
@@ -8,39 +9,68 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/graduation_db'
 });
 
-async function runMigration() {
+const migrationsDir = path.join(__dirname, 'migrations');
+
+const client = process.env.DATABASE_URL
+  ? new Client({ connectionString: process.env.DATABASE_URL })
+  : new Client({
+      host: process.env.PGHOST || 'localhost',
+      port: process.env.PGPORT ? parseInt(process.env.PGPORT, 10) : 5432,
+      user: process.env.PGUSER || 'postgres',
+      password: process.env.PGPASSWORD || '',
+      database: process.env.PGDATABASE || 'graduation_db',
+    });
+
+async function runMigrations() {
   try {
-    console.log('Running migration: Add download_tracking table...');
-    
-    const migrationSQL = `
-      -- Create download_tracking table if it doesn't exist
-      CREATE TABLE IF NOT EXISTS download_tracking (
-          id SERIAL PRIMARY KEY,
-          student_id VARCHAR(50) NOT NULL REFERENCES students(student_id),
-          confirmation_id VARCHAR(20) NOT NULL,
-          downloaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-          ip_address VARCHAR(45),
-          user_agent TEXT,
-          UNIQUE(student_id)
+    await client.connect();
+
+    // 1. Create migrations table if it doesn't exist
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS schema_migrations (
+        id SERIAL PRIMARY KEY,
+        migration_name VARCHAR(255) UNIQUE NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
+    `);
 
-      -- Add index for better performance
-      CREATE INDEX IF NOT EXISTS idx_download_tracking_student_id ON download_tracking (student_id);
-      CREATE INDEX IF NOT EXISTS idx_download_tracking_downloaded_at ON download_tracking (downloaded_at);
+    // 2. Get already run migrations
+    const { rows } = await client.query('SELECT migration_name FROM schema_migrations');
+    const completedMigrations = rows.map(r => r.migration_name);
 
-      -- Log the migration
-      INSERT INTO audit_logs (action, user_name, details) 
-      VALUES ('MIGRATION', 'SYSTEM', 'Added download_tracking table to prevent multiple PDF downloads per student');
-    `;
+    const files = fs.readdirSync(migrationsDir)
+      .filter(f => f.endsWith('.sql'))
+      .sort();
 
-    await pool.query(migrationSQL);
-    console.log('Migration completed successfully!');
-    
-  } catch (error) {
-    console.error('Migration failed:', error);
+    for (const file of files) {
+      if (completedMigrations.includes(file)) {
+        console.log(`Skipping already run migration: ${file}`);
+        continue;
+      }
+
+      const filePath = path.join(migrationsDir, file);
+      const sql = fs.readFileSync(filePath, 'utf8');
+      console.log(`Running migration: ${file}`);
+
+      // Run migration in a transaction
+      await client.query('BEGIN');
+      try {
+        await client.query(sql);
+        await client.query('INSERT INTO schema_migrations (migration_name) VALUES ($1)', [file]);
+        await client.query('COMMIT');
+        console.log(`Migration ${file} completed.`);
+      } catch (err) {
+        await client.query('ROLLBACK');
+        console.error(`Migration ${file} failed. Rolling back.`);
+        throw err; // re-throw error to be caught by outer catch block
+      }
+    }
+    console.log('All new migrations completed successfully.');
+  } catch (err) {
+    console.error('Migration process failed:', err);
   } finally {
-    await pool.end();
+    await client.end();
   }
 }
 
-runMigration(); 
+runMigrations(); 

@@ -2,7 +2,7 @@ export interface Student {
   id: string;
   name: string;
   email: string;
-  studentId: string;
+  studentId: number;
   program: string;
   faculty: string;
   gpa: number;

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSocket, CsvUploadCompleteEvent } from '../../hooks/useSocket';
+import { useSocket } from '../../contexts/SocketContext';
 import DashboardStats from '../../components/admin/DashboardStats';
 import AuditLogTable from '../../components/admin/AuditLogTable';
 import RegisteredStudentsTable from '../../components/admin/RegisteredStudentsTable';
@@ -26,6 +26,8 @@ const AdminDashboard = () => {
   // API URL -  calls backend 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
   
+  const { socket } = useSocket();
+
   // Fetch students data from the API   
   const fetchStudents = async () => {
     try {
@@ -52,14 +54,18 @@ const AdminDashboard = () => {
     fetchStudents();
   }, [API_URL, page]);
 
-  // Listen for CSV upload completion via WebSocket
-  useSocket((data: CsvUploadCompleteEvent) => {
-    console.log('Received CSV upload complete event:', data);
-    if (data.success) {
-      console.log('CSV upload successful, refetching students...');
-      fetchStudents(); // Refetch students to update the list
-    }
-  });
+  useEffect(() => {
+    if (!socket) return;
+    const handler = (data: CsvUploadCompleteEvent) => {
+      console.log('Received CSV upload complete event:', data);
+      if (data.success) {
+        console.log('CSV upload successful, refetching students...');
+        fetchStudents();
+      }
+    };
+    socket.on('csv-upload-complete', handler);
+    return () => socket.off('csv-upload-complete', handler);
+  }, [socket]);
 
   return (
     <div className="container mx-auto px-4 py-8">

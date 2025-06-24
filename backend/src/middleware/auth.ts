@@ -4,7 +4,7 @@ import db from '../db/db';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'secret';
 
-interface AuthRequest extends Request {
+export interface AuthRequest extends Request {
   user?: {
     id: string;
     name: string;

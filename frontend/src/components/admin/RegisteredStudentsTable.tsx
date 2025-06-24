@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { adminService } from '../../services/adminService';
 import { Student } from '../../types/Student';
 import Button from '../ui/Button';
+import { useSocket } from '../../contexts/SocketContext';
 
 const RegisteredStudentsTable = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -9,23 +10,36 @@ const RegisteredStudentsTable = () => {
   const [page, setPage] = useState(1);
   const [totalStudents, setTotalStudents] = useState(0);
   const studentsPerPage = 10;
+  const { socket } = useSocket();
+
+  const fetchStudents = useCallback(async () => {
+    try {
+      const data = await adminService.getRegisteredStudents(page, studentsPerPage);
+      setStudents(data.students);
+      setTotalStudents(data.total);
+    } catch (error) {
+      console.error('Failed to fetch registered students:', error);
+    }
+  }, [page]);
 
   useEffect(() => {
-    const fetchStudents = async () => {
-      setLoading(true);
-      try {
-        const data = await adminService.getRegisteredStudents(page, studentsPerPage);
-        setStudents(data.students);
-        setTotalStudents(data.total);
-      } catch (error) {
-        console.error('Failed to fetch registered students:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    fetchStudents().finally(() => setLoading(false));
+  }, [fetchStudents]);
 
-    fetchStudents();
-  }, [page]);
+  useEffect(() => {
+    if (socket) {
+      const handleNewRegistration = () => {
+        console.log('New registration detected, refreshing table...');
+        fetchStudents();
+      };
+      socket.on('new_registration', handleNewRegistration);
+
+      return () => {
+        socket.off('new_registration', handleNewRegistration);
+      };
+    }
+  }, [socket, fetchStudents]);
 
   const totalPages = Math.ceil(totalStudents / studentsPerPage);
 

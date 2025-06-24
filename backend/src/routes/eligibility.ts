@@ -5,7 +5,8 @@ const router = Router();
 
 // Check if a student is eligible
 router.get('/check/:studentId', async (req, res) => {
-  const { studentId } = req.params;
+  let studentId = parseInt(req.params.studentId, 10);
+  if (isNaN(studentId)) return res.status(400).json({ isEligible: false, error: 'Invalid studentId' });
   try {
     const result = await db.query(
       'SELECT eligibility_status FROM students WHERE student_id = $1',
@@ -20,8 +21,8 @@ router.get('/check/:studentId', async (req, res) => {
 
 // Get full student details
 router.get('/student/:studentId', async (req, res) => {
-  const { studentId } = req.params;
-  if (!studentId) return res.status(400).json({ error: 'Missing studentId' });
+  let studentId = parseInt(req.params.studentId, 10);
+  if (isNaN(studentId)) return res.status(400).json({ error: 'Invalid studentId' });
   try {
     const result = await db.query(
       'SELECT * FROM students WHERE student_id = $1',

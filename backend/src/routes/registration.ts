@@ -3,12 +3,15 @@ import db from '../db/db';
 import { logger } from '../utils/logger';
 import { stringify } from 'csv-stringify';
 import PDFDocument from 'pdfkit';
+import { io } from '../app';
 
 const router = Router();
 
 router.post('/submit', async (req, res) => {
   try {
-    const { studentId, ...formData } = req.body;
+    let { studentId, ...formData } = req.body;
+    studentId = parseInt(studentId, 10);
+    if (isNaN(studentId)) return res.status(400).json({ success: false, message: 'Invalid studentId' });
 
     // First, check if the student exists and is eligible
     const studentResult = await db.query(
@@ -87,6 +90,9 @@ router.post('/submit', async (req, res) => {
       ['REGISTRATION', studentId, `Graduation registration completed with confirmation ID: ${finalConfirmationId}`]
     );
 
+    // Notify connected clients of the new registration
+    io.emit('new_registration', { studentId: finalConfirmationId });
+
     logger.info(`Successful registration for student: ${studentId}`, { category: 'Registration' });
 
     res.json({ 
@@ -105,7 +111,9 @@ router.post('/submit', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { student_id, name, email, program, faculty } = req.body;
+    let { student_id, name, email, program, faculty } = req.body;
+    student_id = parseInt(student_id, 10);
+    if (isNaN(student_id)) return res.status(400).json({ error: 'Invalid student_id' });
 
     // Validate student_id exists in students table
     const studentExists = await db.query(
@@ -133,7 +141,8 @@ router.post('/', async (req, res) => {
 // Export student registration confirmation as PDF
 router.get('/export/:studentId', async (req, res) => {
   try {
-    const { studentId } = req.params;
+    let studentId = parseInt(req.params.studentId, 10);
+    if (isNaN(studentId)) return res.status(400).json({ error: 'Invalid studentId' });
 
     // Get student and registration data
     const result = await db.query(`
@@ -499,7 +508,8 @@ router.get('/export/:studentId', async (req, res) => {
 // Get registration status for a student
 router.get('/status/:studentId', async (req, res) => {
   try {
-    const { studentId } = req.params;
+    let studentId = parseInt(req.params.studentId, 10);
+    if (isNaN(studentId)) return res.status(400).json({ error: 'Invalid studentId' });
 
     const result = await db.query(`
       SELECT r.confirmation_id, r.created_at

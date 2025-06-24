@@ -1,5 +1,3 @@
-
-
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export const authService = {
@@ -48,8 +46,15 @@ export const authService = {
     const res = await fetch(`${API_URL}/auth/me`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!res.ok) return null;
-    return res.json();
+    
+    if (!res.ok) {
+      // Throw an error if token is invalid, so AuthContext can catch it
+      throw new Error('Invalid or expired token');
+    }
+
+    const data = await res.json();
+    // The backend returns { user: ... }, so return the nested user object
+    return data.user;
   },
 
   // Logout user

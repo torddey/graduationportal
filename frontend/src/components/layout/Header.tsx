@@ -86,7 +86,7 @@ const Header = () => {
                 <div className="relative group">
                   <button className="flex items-center space-x-1 hover:text-[#ffc425] transition">
                     <User size={18} />
-                    <span>{user.name.split(' ')[0]}</span>
+                    <span>{user?.name ? user.name.split(' ')[0] : 'User'}</span>
                   </button>
                   <div className="absolute right-0 w-48 mt-2 bg-white rounded-md shadow-lg overflow-hidden z-20 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300">
                     <Link 

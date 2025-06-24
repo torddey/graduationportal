@@ -17,7 +17,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 CREATE TABLE students (
     id SERIAL PRIMARY KEY,
-    student_id VARCHAR(50) UNIQUE NOT NULL,
+    student_id INTEGER UNIQUE NOT NULL,
     name VARCHAR(100) NOT NULL,
     email VARCHAR(100) NOT NULL,
     school VARCHAR(100) NOT NULL DEFAULT 'UNKNOWN',
@@ -37,7 +37,7 @@ CREATE UNIQUE INDEX idx_students_student_id ON students (student_id);
 
 CREATE TABLE registrations (
     id SERIAL PRIMARY KEY,
-    student_id VARCHAR(50) NOT NULL REFERENCES students(student_id),
+    student_id INTEGER NOT NULL REFERENCES students(student_id),
     school VARCHAR(100) NOT NULL DEFAULT 'UNKNOWN',
     program VARCHAR(100) NOT NULL DEFAULT 'UNKNOWN',
     course VARCHAR(100) NOT NULL DEFAULT 'UNKNOWN',
@@ -67,7 +67,7 @@ CREATE TABLE admin_users (
 
 CREATE TABLE otps (
     id SERIAL PRIMARY KEY,
-    student_id VARCHAR(50) NOT NULL, 
+    student_id INTEGER NOT NULL, 
     otp_code VARCHAR(10) NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     used BOOLEAN DEFAULT FALSE,

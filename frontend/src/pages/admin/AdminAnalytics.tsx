@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { adminService } from '../../services/adminService';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, LineChart, Line, Legend } from 'recharts';
 import Button from '../../components/ui/Button';
+import { useSocket } from '../../contexts/SocketContext';
 
 const AdminAnalytics = () => {
   const [bySchool, setBySchool] = useState<any[]>([]);
@@ -10,30 +11,43 @@ const AdminAnalytics = () => {
   const [overTime, setOverTime] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { socket } = useSocket();
+
+  const fetchAnalytics = useCallback(async () => {
+    try {
+      const [school, program, course, time] = await Promise.all([
+        adminService.getAnalyticsBySchool(),
+        adminService.getAnalyticsByProgram(),
+        adminService.getAnalyticsByCourse(),
+        adminService.getRegistrationsOverTime(),
+      ]);
+      setBySchool(school);
+      setByProgram(program);
+      setByCourse(course);
+      setOverTime(time);
+    } catch (err: any) {
+      setError(err.message || 'Failed to load analytics');
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchAnalytics = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [school, program, course, time] = await Promise.all([
-          adminService.getAnalyticsBySchool(),
-          adminService.getAnalyticsByProgram(),
-          adminService.getAnalyticsByCourse(),
-          adminService.getRegistrationsOverTime(),
-        ]);
-        setBySchool(school);
-        setByProgram(program);
-        setByCourse(course);
-        setOverTime(time);
-      } catch (err: any) {
-        setError(err.message || 'Failed to load analytics');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAnalytics();
-  }, []);
+    setLoading(true);
+    fetchAnalytics().finally(() => setLoading(false));
+  }, [fetchAnalytics]);
+
+  useEffect(() => {
+    if (socket) {
+      const handleNewRegistration = () => {
+        console.log('New registration detected, refreshing analytics...');
+        fetchAnalytics();
+      };
+      socket.on('new_registration', handleNewRegistration);
+
+      return () => {
+        socket.off('new_registration', handleNewRegistration);
+      };
+    }
+  }, [socket, fetchAnalytics]);
 
   const handleExport = async () => {
     try {

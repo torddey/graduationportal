@@ -1,9 +1,17 @@
 import { useState, useRef, useEffect } from 'react';
 import { adminService } from '../../services/adminService';
-import { useSocket, CsvUploadCompleteEvent } from '../../hooks/useSocket';
+import { useSocket } from '../../contexts/SocketContext';
 import toast from 'react-hot-toast';
 import Button from '../ui/Button';
 import ConnectionStatus from '../ui/ConnectionStatus';
+
+type CsvUploadCompleteEvent = {
+  success: boolean;
+  count: number;
+  errors: string[];
+  timestamp: string;
+  [key: string]: any;
+};
 
 const CsvUploader = () => {
   const [file, setFile] = useState<File | null>(null);
@@ -17,24 +25,30 @@ const CsvUploader = () => {
     timestamp: ''
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { socket, isConnected } = useSocket();
 
-  // Set up socket listener for upload completion with enhanced logging
-  const { connectionState } = useSocket((data: CsvUploadCompleteEvent) => {
-    console.log('[CsvUploader] Received upload complete event:', data);
-    setUploadStats(data);
-    
-    if (data.success) {
-      console.log('[CsvUploader] Upload successful, transitioning to success state');
-      setUploadStep('success');
-      toast.success(`Successfully uploaded ${data.count} eligible students`);
-    } else {
-      console.log('[CsvUploader] Upload failed, returning to preview state');
-      setUploadStep('preview');
-      const errorMessage = data.errors?.[0] || 'Unknown error';
-      toast.error(`Upload failed: ${errorMessage}`);
-    }
-    setIsUploading(false);
-  });
+  useEffect(() => {
+    if (!socket) return;
+    const handleUploadComplete = (data: CsvUploadCompleteEvent) => {
+      console.log('[CsvUploader] Received upload complete event:', data);
+      setUploadStats(data);
+      if (data.success) {
+        console.log('[CsvUploader] Upload successful, transitioning to success state');
+        setUploadStep('success');
+        toast.success(`Successfully uploaded ${data.count} eligible students`);
+      } else {
+        console.log('[CsvUploader] Upload failed, returning to preview state');
+        setUploadStep('preview');
+        const errorMessage = data.errors?.[0] || 'Unknown error';
+        toast.error(`Upload failed: ${errorMessage}`);
+      }
+      setIsUploading(false);
+    };
+    socket.on('csv-upload-complete', handleUploadComplete);
+    return () => {
+      socket.off('csv-upload-complete', handleUploadComplete);
+    };
+  }, [socket]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -210,21 +224,11 @@ const CsvUploader = () => {
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-lg text-gray-700">Uploading and processing student data...</p>
           <p className="text-sm text-gray-500">This may take a few moments</p>
-          {connectionState.status !== 'connected' && (
+          {!isConnected && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
               <p className="text-sm text-red-600 font-medium">Connection Issue</p>
               <p className="text-sm text-red-500 mt-1">
-                {connectionState.lastError || 'Socket connection issue detected'}
-                {connectionState.reconnectAttempts > 0 && (
-                  <span className="block mt-1">
-                    Reconnection attempt {connectionState.reconnectAttempts} of 5
-                  </span>
-                )}
-                {connectionState.latency > 1000 && (
-                  <span className="block mt-1">
-                    High latency detected: {connectionState.latency}ms
-                  </span>
-                )}
+                Socket connection issue detected
               </p>
             </div>
           )}

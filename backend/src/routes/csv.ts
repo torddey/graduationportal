@@ -68,6 +68,7 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
   const batchSize = 1000; // Process in batches of 1000
   let studentsBatch: any[] = [];
   let totalCount = 0;
+  let totalDuplicates = 0; // Track duplicates
   const errors: string[] = [];
   let fileStream: fs.ReadStream | undefined;
   let parser: any;
@@ -92,8 +93,10 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
     if (!row.student_id || !row.name || !row.email || !row.school || !row.program || !row.course) {
       return null;
     }
+    const studentIdInt = parseInt(row.student_id.trim(), 10);
+    if (isNaN(studentIdInt)) return null;
     return {
-      student_id: row.student_id.trim(),
+      student_id: studentIdInt,
       name: row.name.trim(),
       email: row.email.trim(),
       school: row.school.trim(),
@@ -129,25 +132,49 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
       ).catch(logError => console.error('Error logging audit_logs (failure):', logError));
     }
 
+    if (uploadErrors.length === 0 && totalDuplicates > 0) {
+      uploadErrors.push(`Found and skipped ${totalDuplicates} duplicate student ID(s).`);
+    }
+
     // Emit socket event
     io.emit('csv-upload-complete', { 
       success: success && uploadErrors.length === 0, 
       count: totalCount, 
+      duplicates: totalDuplicates, // Include duplicates in event
       errors: uploadErrors,
       timestamp: new Date().toISOString()
     });
 
     // Send HTTP response
     if (!res.headersSent) {
-        res.json({ success: success && uploadErrors.length === 0, count: totalCount, errors: uploadErrors });
+        res.json({ 
+          success: success && uploadErrors.length === 0, 
+          count: totalCount, 
+          duplicates: totalDuplicates, // Include duplicates in response
+          errors: uploadErrors 
+        });
     }
   };
 
   const processBatch = async (batch: any[]) => {
     if (batch.length === 0) return;
     try {
-      const processedCount = await bulkUpsertStudents(batch);
-      totalCount += processedCount;
+      // Filter out duplicates within the batch
+      const uniqueStudents: any[] = [];
+      const seenIds = new Set();
+      for (const student of batch) {
+        if (!seenIds.has(student.student_id)) {
+          uniqueStudents.push(student);
+          seenIds.add(student.student_id);
+        } else {
+          totalDuplicates++;
+        }
+      }
+
+      if (uniqueStudents.length > 0) {
+        const processedCount = await bulkUpsertStudents(uniqueStudents);
+        totalCount += processedCount;
+      }
     } catch (batchErr) {
       console.error(`Error processing batch:`, batchErr);
       errors.push(`Batch processing failed. Error: ${batchErr instanceof Error ? batchErr.message : String(batchErr)}`);
