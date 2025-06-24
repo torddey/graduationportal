@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { socketMonitor, ConnectionState } from '../../utils/socketMonitor';
-import { Wifi, WifiOff, AlertCircle, Clock } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { socketMonitor, ConnectionState } from "../../utils/socketMonitor";
+import { Wifi, WifiOff, AlertCircle, Clock } from "lucide-react";
 
 const ConnectionStatus: React.FC = () => {
-  const [state, setState] = useState<ConnectionState>(socketMonitor.getConnectionState());
+  const [state, setState] = useState<ConnectionState>(
+    socketMonitor.getConnectionState(),
+  );
 
   useEffect(() => {
     const updateState = () => {
@@ -18,26 +20,26 @@ const ConnectionStatus: React.FC = () => {
 
   const getStatusColor = () => {
     switch (state.status) {
-      case 'connected':
-        return 'text-green-500';
-      case 'connecting':
-        return 'text-yellow-500';
-      case 'error':
-      case 'disconnected':
-        return 'text-red-500';
+      case "connected":
+        return "text-green-500";
+      case "connecting":
+        return "text-yellow-500";
+      case "error":
+      case "disconnected":
+        return "text-red-500";
       default:
-        return 'text-gray-500';
+        return "text-gray-500";
     }
   };
 
   const getStatusIcon = () => {
     switch (state.status) {
-      case 'connected':
+      case "connected":
         return <Wifi className="w-4 h-4" />;
-      case 'connecting':
+      case "connecting":
         return <Clock className="w-4 h-4 animate-spin" />;
-      case 'error':
-      case 'disconnected':
+      case "error":
+      case "disconnected":
         return <WifiOff className="w-4 h-4" />;
       default:
         return <AlertCircle className="w-4 h-4" />;
@@ -46,16 +48,16 @@ const ConnectionStatus: React.FC = () => {
 
   const getStatusText = () => {
     switch (state.status) {
-      case 'connected':
+      case "connected":
         return `Connected (${state.transport})`;
-      case 'connecting':
+      case "connecting":
         return `Connecting... (Attempt ${state.reconnectAttempts})`;
-      case 'error':
+      case "error":
         return `Error: ${state.lastError}`;
-      case 'disconnected':
-        return 'Disconnected';
+      case "disconnected":
+        return "Disconnected";
       default:
-        return 'Unknown';
+        return "Unknown";
     }
   };
 
@@ -80,4 +82,4 @@ const ConnectionStatus: React.FC = () => {
   );
 };
 
-export default ConnectionStatus; 
+export default ConnectionStatus;

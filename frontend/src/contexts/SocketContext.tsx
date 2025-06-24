@@ -1,8 +1,8 @@
-import { createContext, useContext, useEffect, useState } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { socketMonitor } from '../utils/socketMonitor';
+import { createContext, useContext, useEffect, useState } from "react";
+import { io, Socket } from "socket.io-client";
+import { socketMonitor } from "../utils/socketMonitor";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:5001';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:5001";
 
 interface SocketContextType {
   socket: Socket | null;
@@ -23,7 +23,8 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const [isConnected, setIsConnected] = useState(false);
 
   // Get the token from localStorage (or from user if you store it there)
-  const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("authToken") : null;
 
   useEffect(() => {
     // Disconnect previous socket if any
@@ -32,27 +33,27 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     }
     // Create a new socket connection with the token
     const newSocket = io(SOCKET_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ["websocket", "polling"],
       auth: token ? { token } : undefined,
     });
     socketMonitor.initialize(newSocket);
     setSocket(newSocket);
 
-    newSocket.on('connect', () => {
+    newSocket.on("connect", () => {
       setIsConnected(true);
-      console.log('Socket connected:', newSocket.id);
+      console.log("Socket connected:", newSocket.id);
     });
 
-    newSocket.on('disconnect', () => {
+    newSocket.on("disconnect", () => {
       setIsConnected(false);
-      console.log('Socket disconnected');
+      console.log("Socket disconnected");
     });
 
     return () => {
       newSocket.disconnect();
       socketMonitor.cleanup();
     };
-  // Re-run when the token changes
+    // Re-run when the token changes
   }, [token]);
 
   return (
@@ -60,4 +61,4 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       {children}
     </SocketContext.Provider>
   );
-}; 
+};

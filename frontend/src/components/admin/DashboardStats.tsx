@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import { adminService } from '../../services/adminService';
-import { GraduationCap, Users, CheckCircle, Clock } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { adminService } from "../../services/adminService";
+import { GraduationCap, Users, CheckCircle, Clock } from "lucide-react";
 
 const DashboardStats = () => {
   const [stats, setStats] = useState({
     totalEligible: 0,
     registered: 0,
     pending: 0,
-    lastUpload: ''
+    lastUpload: "",
   });
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +17,7 @@ const DashboardStats = () => {
         const data = await adminService.getDashboardStats();
         setStats(data);
       } catch (error) {
-        console.error('Failed to fetch dashboard stats:', error);
+        console.error("Failed to fetch dashboard stats:", error);
       } finally {
         setLoading(false);
       }
@@ -27,15 +27,15 @@ const DashboardStats = () => {
   }, []);
 
   const formatDate = (dateString: string) => {
-    if (!dateString) return 'Never';
-    
+    if (!dateString) return "Never";
+
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Intl.DateTimeFormat("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     }).format(date);
   };
 
@@ -48,7 +48,10 @@ const DashboardStats = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="bg-white p-6 rounded-lg shadow-md animate-pulse">
+          <div
+            key={i}
+            className="bg-white p-6 rounded-lg shadow-md animate-pulse"
+          >
             <div className="h-10 w-10 rounded-full bg-gray-200 mb-4"></div>
             <div className="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
             <div className="h-8 bg-gray-200 rounded w-1/4"></div>
@@ -65,12 +68,16 @@ const DashboardStats = () => {
           <div className="p-2 rounded-full bg-blue-100 text-blue-600">
             <GraduationCap size={24} />
           </div>
-          <h3 className="ml-3 text-lg font-medium text-gray-700">Total Eligible</h3>
+          <h3 className="ml-3 text-lg font-medium text-gray-700">
+            Total Eligible
+          </h3>
         </div>
-        <p className="text-3xl font-bold text-gray-800">{stats.totalEligible}</p>
+        <p className="text-3xl font-bold text-gray-800">
+          {stats.totalEligible}
+        </p>
         <p className="text-sm text-gray-500 mt-2">Total eligible students</p>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex items-center mb-4">
           <div className="p-2 rounded-full bg-green-100 text-green-600">
@@ -83,7 +90,7 @@ const DashboardStats = () => {
           {calculatePercentage()}% of eligible students
         </p>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex items-center mb-4">
           <div className="p-2 rounded-full bg-yellow-100 text-yellow-600">
@@ -92,22 +99,22 @@ const DashboardStats = () => {
           <h3 className="ml-3 text-lg font-medium text-gray-700">Pending</h3>
         </div>
         <p className="text-3xl font-bold text-gray-800">{stats.pending}</p>
-        <p className="text-sm text-gray-500 mt-2">
-          Awaiting registration
-        </p>
+        <p className="text-sm text-gray-500 mt-2">Awaiting registration</p>
       </div>
-      
+
       <div className="bg-white p-6 rounded-lg shadow-md">
         <div className="flex items-center mb-4">
           <div className="p-2 rounded-full bg-purple-100 text-purple-600">
             <Users size={24} />
           </div>
-          <h3 className="ml-3 text-lg font-medium text-gray-700">Last Upload</h3>
+          <h3 className="ml-3 text-lg font-medium text-gray-700">
+            Last Upload
+          </h3>
         </div>
-        <p className="text-md font-semibold text-gray-800">{formatDate(stats.lastUpload)}</p>
-        <p className="text-sm text-gray-500 mt-2">
-          Last student data import
+        <p className="text-md font-semibold text-gray-800">
+          {formatDate(stats.lastUpload)}
         </p>
+        <p className="text-sm text-gray-500 mt-2">Last student data import</p>
       </div>
     </div>
   );

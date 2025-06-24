@@ -1,15 +1,17 @@
-const { Pool } = require('pg');
-require('dotenv').config();
+const { Pool } = require("pg");
+require("dotenv").config();
 
 // Database configuration from environment variables
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/graduation_db'
+  connectionString:
+    process.env.DATABASE_URL ||
+    "postgresql://postgres:postgres@localhost:5432/graduation_db",
 });
 
 async function removeDownloadTracking() {
   try {
-    console.log('Removing download_tracking table...');
-    
+    console.log("Removing download_tracking table...");
+
     const migrationSQL = `
       -- Drop download_tracking table if it exists
       DROP TABLE IF EXISTS download_tracking CASCADE;
@@ -20,13 +22,12 @@ async function removeDownloadTracking() {
     `;
 
     await pool.query(migrationSQL);
-    console.log('Migration completed successfully! Download tracking removed.');
-    
+    console.log("Migration completed successfully! Download tracking removed.");
   } catch (error) {
-    console.error('Migration failed:', error);
+    console.error("Migration failed:", error);
   } finally {
     await pool.end();
   }
 }
 
-removeDownloadTracking(); 
+removeDownloadTracking();

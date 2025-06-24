@@ -1,12 +1,12 @@
-import { useState, useEffect } from 'react';
-import { useSocket } from '../../contexts/SocketContext';
-import DashboardStats from '../../components/admin/DashboardStats';
-import AuditLogTable from '../../components/admin/AuditLogTable';
-import RegisteredStudentsTable from '../../components/admin/RegisteredStudentsTable';
-import ExportDropdown from '../../components/admin/ExportDropdown';
-import { Clock, Mail, Upload } from 'lucide-react';
-import Button from '../../components/ui/Button';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from "react";
+import { useSocket } from "../../contexts/SocketContext";
+import DashboardStats from "../../components/admin/DashboardStats";
+import AuditLogTable from "../../components/admin/AuditLogTable";
+import RegisteredStudentsTable from "../../components/admin/RegisteredStudentsTable";
+import ExportDropdown from "../../components/admin/ExportDropdown";
+import { Clock, Mail, Upload } from "lucide-react";
+import Button from "../../components/ui/Button";
+import { Link } from "react-router-dom";
 
 interface UploadedData {
   student_id: string;
@@ -22,27 +22,29 @@ const AdminDashboard = () => {
   const [page, setPage] = useState(1);
   const [totalStudents, setTotalStudents] = useState(0);
   const studentsPerPage = 10;
-  
-  // API URL -  calls backend 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-  
+
+  // API URL -  calls backend
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
   const { socket } = useSocket();
 
-  // Fetch students data from the API   
+  // Fetch students data from the API
   const fetchStudents = async () => {
     try {
       setLoading(true);
       // Fixed: Call backend API with pagination parameters
-      const res = await fetch(`${API_URL}/students?page=${page}&limit=${studentsPerPage}`);
+      const res = await fetch(
+        `${API_URL}/students?page=${page}&limit=${studentsPerPage}`,
+      );
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
       }
       const data = await res.json();
-      console.log('Fetched students:', data);
+      console.log("Fetched students:", data);
       setStudents(data.students);
       setTotalStudents(data.total);
     } catch (error) {
-      console.error('Error fetching students:', error);
+      console.error("Error fetching students:", error);
       // Set empty array on error to prevent crashes
       setStudents([]);
     } finally {
@@ -57,14 +59,14 @@ const AdminDashboard = () => {
   useEffect(() => {
     if (!socket) return;
     const handler = (data: CsvUploadCompleteEvent) => {
-      console.log('Received CSV upload complete event:', data);
+      console.log("Received CSV upload complete event:", data);
       if (data.success) {
-        console.log('CSV upload successful, refetching students...');
+        console.log("CSV upload successful, refetching students...");
         fetchStudents();
       }
     };
-    socket.on('csv-upload-complete', handler);
-    return () => socket.off('csv-upload-complete', handler);
+    socket.on("csv-upload-complete", handler);
+    return () => socket.off("csv-upload-complete", handler);
   }, [socket]);
 
   return (
@@ -72,29 +74,28 @@ const AdminDashboard = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage graduation registrations and student data</p>
+          <p className="text-gray-600">
+            Manage graduation registrations and student data
+          </p>
         </div>
-        
+
         <div className="flex space-x-2 mt-4 md:mt-0">
           <Link to="/admin/upload">
-            <Button
-              variant="primary"
-              icon={<Upload size={18} />}
-            >
+            <Button variant="primary" icon={<Upload size={18} />}>
               Upload Students
             </Button>
           </Link>
-          
+
           <ExportDropdown variant="outline" />
         </div>
       </div>
-      
+
       {/* Stats */}
       {/* Removed DashboardStats component */}
       {/* <div className="mb-8">
         <DashboardStats />
       </div> */}
-      
+
       {/* Upcoming Deadlines */}
       {/* Removed Upcoming Deadlines section */}
       {/* <div className="mb-8">
@@ -130,23 +131,29 @@ const AdminDashboard = () => {
           </div>
         </div>
       </div> */}
-      
+
       {/* Registration Stats */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
         <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">Latest Registrations</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            Latest Registrations
+          </h2>
           <RegisteredStudentsTable />
         </div>
-        
+
         <div>
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">System Activity</h2>
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">
+            System Activity
+          </h2>
           <AuditLogTable />
         </div>
       </div>
 
       {/* Eligible Students Table */}
       <div className="mb-8">
-        <h2 className="text-xl font-semibold text-gray-800 mb-4">All Eligible Students</h2>
+        <h2 className="text-xl font-semibold text-gray-800 mb-4">
+          All Eligible Students
+        </h2>
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {loading && students.length === 0 ? (
             <div className="p-6">
@@ -170,22 +177,40 @@ const AdminDashboard = () => {
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Student ID
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Name
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Email
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Program
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Contact
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                      >
                         Status
                       </th>
                     </tr>
@@ -200,7 +225,10 @@ const AdminDashboard = () => {
                           {student.name}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <a href={`mailto:${student.email}`} className="text-blue-600 hover:text-blue-800">
+                          <a
+                            href={`mailto:${student.email}`}
+                            className="text-blue-600 hover:text-blue-800"
+                          >
                             {student.email}
                           </a>
                         </td>
@@ -220,17 +248,20 @@ const AdminDashboard = () => {
                   </tbody>
                 </table>
               </div>
-              
+
               {/* Pagination */}
               <div className="px-6 py-4 border-t flex items-center justify-between">
                 <div className="text-sm text-gray-500">
-                  Showing {Math.min((page - 1) * studentsPerPage + 1, totalStudents)} to {Math.min(page * studentsPerPage, totalStudents)} of {totalStudents} eligible students
+                  Showing{" "}
+                  {Math.min((page - 1) * studentsPerPage + 1, totalStudents)} to{" "}
+                  {Math.min(page * studentsPerPage, totalStudents)} of{" "}
+                  {totalStudents} eligible students
                 </div>
                 <div className="flex space-x-2">
-                  <Button 
+                  <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={page === 1 || loading}
                   >
                     Previous
@@ -238,8 +269,18 @@ const AdminDashboard = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => setPage(p => Math.min(Math.ceil(totalStudents / studentsPerPage), p + 1))}
-                    disabled={page >= Math.ceil(totalStudents / studentsPerPage) || loading}
+                    onClick={() =>
+                      setPage((p) =>
+                        Math.min(
+                          Math.ceil(totalStudents / studentsPerPage),
+                          p + 1,
+                        ),
+                      )
+                    }
+                    disabled={
+                      page >= Math.ceil(totalStudents / studentsPerPage) ||
+                      loading
+                    }
                   >
                     Next
                   </Button>
@@ -256,7 +297,13 @@ const AdminDashboard = () => {
 export default AdminDashboard;
 
 // This component is missing in the provided imports
-const GraduationCap = ({ className, size }: { className?: string, size?: number }) => (
+const GraduationCap = ({
+  className,
+  size,
+}: {
+  className?: string;
+  size?: number;
+}) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     width={size || 24}

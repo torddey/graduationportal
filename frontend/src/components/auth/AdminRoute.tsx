@@ -1,7 +1,7 @@
-import { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
-import LoadingSpinner from '../ui/LoadingSpinner';
+import { ReactNode } from "react";
+import { Navigate } from "react-router-dom";
+import { useAuth } from "../../contexts/AuthContext";
+import LoadingSpinner from "../ui/LoadingSpinner";
 
 interface AdminRouteProps {
   children: ReactNode;

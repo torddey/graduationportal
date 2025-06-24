@@ -8,8 +8,8 @@ INSERT INTO students (student_id, name, email, program, phone, eligibility_statu
 
 -- Insert test admin user
 -- The password_hash below is a bcrypt hash for the password: admin123
-INSERT INTO admin_users (username, password_hash, email) VALUES
-('admin', '$2b$10$wH8QwQwQwQwQwQwQwQwQwOQwQwQwQwQwQwQwQwQwQwQwQwQwQw', 'admin@gimpa.edu.gh');
+INSERT INTO admin_users (username, password_hash, email, role) VALUES
+('admin', '$2b$10$wH8QwQwQwQwQwQwQwQwQwOQwQwQwQwQwQwQwQwQwQwQwQwQwQw', 'admin@gimpa.edu.gh', 'superadmin');
 
 -- Add some audit logs for testing
 INSERT INTO audit_logs (action, user_name, details) VALUES

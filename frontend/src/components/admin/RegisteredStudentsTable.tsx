@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { adminService } from '../../services/adminService';
-import { Student } from '../../types/Student';
-import Button from '../ui/Button';
-import { useSocket } from '../../contexts/SocketContext';
+import { useState, useEffect, useCallback } from "react";
+import { adminService } from "../../services/adminService";
+import { Student } from "../../types/Student";
+import Button from "../ui/Button";
+import { useSocket } from "../../contexts/SocketContext";
 
 const RegisteredStudentsTable = () => {
   const [students, setStudents] = useState<Student[]>([]);
@@ -14,11 +14,14 @@ const RegisteredStudentsTable = () => {
 
   const fetchStudents = useCallback(async () => {
     try {
-      const data = await adminService.getRegisteredStudents(page, studentsPerPage);
+      const data = await adminService.getRegisteredStudents(
+        page,
+        studentsPerPage,
+      );
       setStudents(data.students);
       setTotalStudents(data.total);
     } catch (error) {
-      console.error('Failed to fetch registered students:', error);
+      console.error("Failed to fetch registered students:", error);
     }
   }, [page]);
 
@@ -30,13 +33,13 @@ const RegisteredStudentsTable = () => {
   useEffect(() => {
     if (socket) {
       const handleNewRegistration = () => {
-        console.log('New registration detected, refreshing table...');
+        console.log("New registration detected, refreshing table...");
         fetchStudents();
       };
-      socket.on('new_registration', handleNewRegistration);
+      socket.on("new_registration", handleNewRegistration);
 
       return () => {
-        socket.off('new_registration', handleNewRegistration);
+        socket.off("new_registration", handleNewRegistration);
       };
     }
   }, [socket, fetchStudents]);
@@ -66,33 +69,58 @@ const RegisteredStudentsTable = () => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="p-6 border-b">
-        <h2 className="text-xl font-semibold text-gray-800">Registered Students</h2>
-        <p className="text-sm text-gray-500">Students who have completed their graduation registration</p>
+        <h2 className="text-xl font-semibold text-gray-800">
+          Registered Students
+        </h2>
+        <p className="text-sm text-gray-500">
+          Students who have completed their graduation registration
+        </p>
       </div>
-      
+
       <div className="overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-50">
             <tr>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Student ID
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Name
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 School
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Program
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Course
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Email
               </th>
-              <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
                 Contact
               </th>
             </tr>
@@ -116,7 +144,10 @@ const RegisteredStudentsTable = () => {
                   {student.course}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  <a href={`mailto:${student.email}`} className="text-blue-600 hover:text-blue-800">
+                  <a
+                    href={`mailto:${student.email}`}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
                     {student.email}
                   </a>
                 </td>
@@ -128,17 +159,19 @@ const RegisteredStudentsTable = () => {
           </tbody>
         </table>
       </div>
-      
+
       {/* Pagination */}
       <div className="px-6 py-4 border-t flex items-center justify-between">
         <div className="text-sm text-gray-500">
-          Showing {Math.min((page - 1) * studentsPerPage + 1, totalStudents)} to {Math.min(page * studentsPerPage, totalStudents)} of {totalStudents} registered students
+          Showing {Math.min((page - 1) * studentsPerPage + 1, totalStudents)} to{" "}
+          {Math.min(page * studentsPerPage, totalStudents)} of {totalStudents}{" "}
+          registered students
         </div>
         <div className="flex space-x-2">
-          <Button 
+          <Button
             size="sm"
             variant="outline"
-            onClick={() => setPage(p => Math.max(1, p - 1))}
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1 || loading}
           >
             Previous
@@ -146,7 +179,7 @@ const RegisteredStudentsTable = () => {
           <Button
             size="sm"
             variant="outline"
-            onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page === totalPages || loading}
           >
             Next

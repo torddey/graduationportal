@@ -1,9 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
-import { adminService } from '../../services/adminService';
-import { useSocket } from '../../contexts/SocketContext';
-import toast from 'react-hot-toast';
-import Button from '../ui/Button';
-import ConnectionStatus from '../ui/ConnectionStatus';
+import { useState, useRef, useEffect } from "react";
+import { adminService } from "../../services/adminService";
+import { useSocket } from "../../contexts/SocketContext";
+import toast from "react-hot-toast";
+import Button from "../ui/Button";
+import ConnectionStatus from "../ui/ConnectionStatus";
 
 type CsvUploadCompleteEvent = {
   success: boolean;
@@ -17,12 +17,14 @@ const CsvUploader = () => {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string[][]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  const [uploadStep, setUploadStep] = useState<'select' | 'preview' | 'uploading' | 'success'>('select');
-  const [uploadStats, setUploadStats] = useState<CsvUploadCompleteEvent>({ 
-    success: false, 
-    count: 0, 
+  const [uploadStep, setUploadStep] = useState<
+    "select" | "preview" | "uploading" | "success"
+  >("select");
+  const [uploadStats, setUploadStats] = useState<CsvUploadCompleteEvent>({
+    success: false,
+    count: 0,
     errors: [],
-    timestamp: ''
+    timestamp: "",
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { socket, isConnected } = useSocket();
@@ -30,69 +32,74 @@ const CsvUploader = () => {
   useEffect(() => {
     if (!socket) return;
     const handleUploadComplete = (data: CsvUploadCompleteEvent) => {
-      console.log('[CsvUploader] Received upload complete event:', data);
+      console.log("[CsvUploader] Received upload complete event:", data);
       setUploadStats(data);
       if (data.success) {
-        console.log('[CsvUploader] Upload successful, transitioning to success state');
-        setUploadStep('success');
+        console.log(
+          "[CsvUploader] Upload successful, transitioning to success state",
+        );
+        setUploadStep("success");
         toast.success(`Successfully uploaded ${data.count} eligible students`);
       } else {
-        console.log('[CsvUploader] Upload failed, returning to preview state');
-        setUploadStep('preview');
-        const errorMessage = data.errors?.[0] || 'Unknown error';
+        console.log("[CsvUploader] Upload failed, returning to preview state");
+        setUploadStep("preview");
+        const errorMessage = data.errors?.[0] || "Unknown error";
         toast.error(`Upload failed: ${errorMessage}`);
       }
       setIsUploading(false);
     };
-    socket.on('csv-upload-complete', handleUploadComplete);
+    socket.on("csv-upload-complete", handleUploadComplete);
     return () => {
-      socket.off('csv-upload-complete', handleUploadComplete);
+      socket.off("csv-upload-complete", handleUploadComplete);
     };
   }, [socket]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
-    
+
     // Check if file is CSV
-    if (!selectedFile.name.endsWith('.csv')) {
-      toast.error('Please upload a CSV file');
+    if (!selectedFile.name.endsWith(".csv")) {
+      toast.error("Please upload a CSV file");
       return;
     }
-    
+
     setFile(selectedFile);
-    
+
     // Read and preview the file
     const reader = new FileReader();
     reader.onload = (event) => {
       const text = event.target?.result as string;
-      const lines = text.split('\n');
+      const lines = text.split("\n");
       const parsedData = lines
-        .filter(line => line.trim() !== '')
-        .map(line => line.split(',').map(cell => cell.trim()));
-      
+        .filter((line) => line.trim() !== "")
+        .map((line) => line.split(",").map((cell) => cell.trim()));
+
       // Show first 10 rows for preview
       setPreview(parsedData.slice(0, 10));
-      setUploadStep('preview');
+      setUploadStep("preview");
     };
     reader.readAsText(selectedFile);
   };
 
   const handleUpload = async () => {
     if (!file) return;
-    
+
     setIsUploading(true);
-    setUploadStep('uploading');
-    
+    setUploadStep("uploading");
+
     try {
       const result = await adminService.uploadEligibleStudents(file);
-      console.log('Upload API response:', result);
+      console.log("Upload API response:", result);
       // Note: We don't set success state here as it's handled by the socket event
     } catch (error) {
-      console.error('Upload error:', error);
-      const errorMessage = error instanceof Error ? error.message : 'An error occurred during upload';
+      console.error("Upload error:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "An error occurred during upload";
       toast.error(errorMessage);
-      setUploadStep('preview');
+      setUploadStep("preview");
       setIsUploading(false);
     }
   };
@@ -100,22 +107,24 @@ const CsvUploader = () => {
   const resetUpload = () => {
     setFile(null);
     setPreview([]);
-    setUploadStep('select');
-    setUploadStats({ success: false, count: 0, errors: [], timestamp: '' });
+    setUploadStep("select");
+    setUploadStats({ success: false, count: 0, errors: [], timestamp: "" });
     // Reset file input
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
+      fileInputRef.current.value = "";
     }
   };
-  
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold text-gray-800">Upload Eligible Students</h2>
+        <h2 className="text-xl font-semibold text-gray-800">
+          Upload Eligible Students
+        </h2>
         <ConnectionStatus />
       </div>
-      
-      {uploadStep === 'select' && (
+
+      {uploadStep === "select" && (
         <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
           <div className="mb-4">
             <svg
@@ -153,24 +162,21 @@ const CsvUploader = () => {
             </label>
           </div>
           <p className="text-sm text-gray-500 mt-4">
-            The CSV file should include student ID, name, email, and program at minimum
+            The CSV file should include student ID, name, email, and program at
+            minimum
           </p>
         </div>
       )}
-      
-      {uploadStep === 'preview' && (
+
+      {uploadStep === "preview" && (
         <div>
           <div className="mb-4 flex items-center justify-between">
             <h3 className="font-medium text-gray-800">Preview: {file?.name}</h3>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetUpload}
-            >
+            <Button variant="outline" size="sm" onClick={resetUpload}>
               Change File
             </Button>
           </div>
-          
+
           <div className="overflow-x-auto border rounded-lg mb-6">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
@@ -201,32 +207,30 @@ const CsvUploader = () => {
               </tbody>
             </table>
           </div>
-          
+
           <div className="flex justify-between">
-            <Button
-              variant="outline"
-              onClick={resetUpload}
-            >
+            <Button variant="outline" onClick={resetUpload}>
               Cancel
             </Button>
-            <Button
-              onClick={handleUpload}
-              loading={isUploading}
-            >
+            <Button onClick={handleUpload} loading={isUploading}>
               Confirm & Upload
             </Button>
           </div>
         </div>
       )}
-      
-      {uploadStep === 'uploading' && (
+
+      {uploadStep === "uploading" && (
         <div className="text-center py-12">
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-lg text-gray-700">Uploading and processing student data...</p>
+          <p className="text-lg text-gray-700">
+            Uploading and processing student data...
+          </p>
           <p className="text-sm text-gray-500">This may take a few moments</p>
           {!isConnected && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-sm text-red-600 font-medium">Connection Issue</p>
+              <p className="text-sm text-red-600 font-medium">
+                Connection Issue
+              </p>
               <p className="text-sm text-red-500 mt-1">
                 Socket connection issue detected
               </p>
@@ -234,8 +238,8 @@ const CsvUploader = () => {
           )}
         </div>
       )}
-      
-      {uploadStep === 'success' && (
+
+      {uploadStep === "success" && (
         <div className="text-center py-8">
           <div className="mb-4">
             <svg
@@ -253,7 +257,9 @@ const CsvUploader = () => {
               />
             </svg>
           </div>
-          <h3 className="text-xl font-medium text-gray-800 mb-2">Upload Complete!</h3>
+          <h3 className="text-xl font-medium text-gray-800 mb-2">
+            Upload Complete!
+          </h3>
           <p className="text-gray-600 mb-6">
             Successfully processed {uploadStats.count} eligible student records.
             {uploadStats.timestamp && (
@@ -294,11 +300,7 @@ const CsvUploader = () => {
               </div>
             </div>
           )}
-          <Button
-            onClick={resetUpload}
-          >
-            Upload Another File
-          </Button>
+          <Button onClick={resetUpload}>Upload Another File</Button>
         </div>
       )}
     </div>

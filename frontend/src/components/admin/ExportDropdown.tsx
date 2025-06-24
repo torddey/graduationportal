@@ -1,14 +1,14 @@
-import { useState, useRef, useEffect } from 'react';
-import { Download, ChevronDown, FileText, Users, Database } from 'lucide-react';
-import { adminService } from '../../services/adminService';
-import Button from '../ui/Button';
-import toast from 'react-hot-toast';
+import { useState, useRef, useEffect } from "react";
+import { Download, ChevronDown, FileText, Users, Database } from "lucide-react";
+import { adminService } from "../../services/adminService";
+import Button from "../ui/Button";
+import toast from "react-hot-toast";
 
 interface ExportDropdownProps {
-  variant?: 'primary' | 'outline';
+  variant?: "primary" | "outline";
 }
 
-const ExportDropdown = ({ variant = 'outline' }: ExportDropdownProps) => {
+const ExportDropdown = ({ variant = "outline" }: ExportDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -16,40 +16,52 @@ const ExportDropdown = ({ variant = 'outline' }: ExportDropdownProps) => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, []);
 
-  const handleExport = async (exportType: 'students' | 'registrations' | 'all') => {
+  const handleExport = async (
+    exportType: "students" | "registrations" | "all",
+  ) => {
     setIsExporting(true);
-    const toastId = toast.loading('Preparing export...');
-    
+    const toastId = toast.loading("Preparing export...");
+
     try {
       switch (exportType) {
-        case 'students':
+        case "students":
           await adminService.exportStudents();
-          toast.success('Students data exported successfully!', { id: toastId });
+          toast.success("Students data exported successfully!", {
+            id: toastId,
+          });
           break;
-        case 'registrations':
+        case "registrations":
           await adminService.exportRegistrations();
-          toast.success('Registrations data exported successfully!', { id: toastId });
+          toast.success("Registrations data exported successfully!", {
+            id: toastId,
+          });
           break;
-        case 'all':
+        case "all":
           await adminService.exportAllData();
-          toast.success('All data exported successfully!', { id: toastId });
+          toast.success("All data exported successfully!", { id: toastId });
           break;
       }
       setIsOpen(false);
     } catch (error) {
-      console.error('Export failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Export failed. Please try again.';
+      console.error("Export failed:", error);
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Export failed. Please try again.";
       toast.error(errorMessage, { id: toastId });
     } finally {
       setIsExporting(false);
@@ -58,21 +70,21 @@ const ExportDropdown = ({ variant = 'outline' }: ExportDropdownProps) => {
 
   const exportOptions = [
     {
-      type: 'students' as const,
-      label: 'Export Students',
-      description: 'All eligible students data',
+      type: "students" as const,
+      label: "Export Students",
+      description: "All eligible students data",
       icon: <Users size={16} />,
     },
     {
-      type: 'registrations' as const,
-      label: 'Export Registrations',
-      description: 'All graduation registrations',
+      type: "registrations" as const,
+      label: "Export Registrations",
+      description: "All graduation registrations",
       icon: <FileText size={16} />,
     },
     {
-      type: 'all' as const,
-      label: 'Export All Data',
-      description: 'Complete dataset with status',
+      type: "all" as const,
+      label: "Export All Data",
+      description: "Complete dataset with status",
       icon: <Database size={16} />,
     },
   ];
@@ -86,17 +98,19 @@ const ExportDropdown = ({ variant = 'outline' }: ExportDropdownProps) => {
         disabled={isExporting}
         className="flex items-center space-x-2"
       >
-        <span>{isExporting ? 'Exporting...' : 'Export Data'}</span>
-        <ChevronDown 
-          size={16} 
-          className={`transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+        <span>{isExporting ? "Exporting..." : "Export Data"}</span>
+        <ChevronDown
+          size={16}
+          className={`transition-transform duration-200 ${isOpen ? "rotate-180" : ""}`}
         />
       </Button>
 
       {isOpen && (
         <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
           <div className="p-4">
-            <h3 className="text-sm font-medium text-gray-900 mb-3">Choose Export Type</h3>
+            <h3 className="text-sm font-medium text-gray-900 mb-3">
+              Choose Export Type
+            </h3>
             <div className="space-y-2">
               {exportOptions.map((option) => (
                 <button
@@ -126,4 +140,4 @@ const ExportDropdown = ({ variant = 'outline' }: ExportDropdownProps) => {
   );
 };
 
-export default ExportDropdown; 
+export default ExportDropdown;

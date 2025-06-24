@@ -8,5 +8,8 @@
   },
   "scripts": {
     "dev": "ts-node-dev --respawn src/index.ts"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0"
   }
 }

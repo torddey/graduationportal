@@ -14,8 +14,8 @@ export interface RegistrationForm {
     phone: string;
   };
   guestCount: number;
-  dignitaries: 'yes' | 'no';
-  specialRequirements: 'physical_disability' | 'visual_impairment' | 'none';
+  dignitaries: "yes" | "no";
+  specialRequirements: "physical_disability" | "visual_impairment" | "none";
   attendanceConfirmed: boolean;
   agreeToTerms: boolean;
 }

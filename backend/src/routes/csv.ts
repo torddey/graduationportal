@@ -1,12 +1,12 @@
-import { Router } from 'express';
-import { io } from '../app';
-import db from '../db/db';
-import multer from 'multer';
-import { parse } from 'csv-parse';
-import fs from 'fs';
+import { Router } from "express";
+import { io } from "../app";
+import db from "../db/db";
+import multer from "multer";
+import { parse } from "csv-parse";
+import fs from "fs";
 
 const router = Router();
-const upload = multer({ dest: 'uploads/' });
+const upload = multer({ dest: "uploads/" });
 
 interface UploadedData {
   student_id: string;
@@ -22,24 +22,28 @@ interface UploadedData {
 const bulkUpsertStudents = async (students: any[]) => {
   if (students.length === 0) return 0; // Return count of inserted/updated rows
 
-  const values = students.map(student => [
-    student.student_id,
-    student.name,
-    student.email,
-    student.school,
-    student.program,
-    student.course,
-    student.phone || null
-  ]).flat();
+  const values = students
+    .map((student) => [
+      student.student_id,
+      student.name,
+      student.email,
+      student.school,
+      student.program,
+      student.course,
+      student.phone || null,
+    ])
+    .flat();
 
   // Construct the multi-value insert query
   // Adjust placeholder count based on the number of columns being inserted/updated
   const numColumns = 7; // student_id, name, email, school, program, course, phone
-  const valuePlaceholders = students.map((_, i) => {
-    const start = i * numColumns + 1;
-    // Ensure the VALUES clause matches the columns and placeholders
-    return `($${start}, $${start + 1}, $${start + 2}, $${start + 3}, $${start + 4}, $${start + 5}, $${start + 6}, TRUE)`;
-  }).join(',');
+  const valuePlaceholders = students
+    .map((_, i) => {
+      const start = i * numColumns + 1;
+      // Ensure the VALUES clause matches the columns and placeholders
+      return `($${start}, $${start + 1}, $${start + 2}, $${start + 3}, $${start + 4}, $${start + 5}, $${start + 6}, TRUE)`;
+    })
+    .join(",");
 
   const query = `
     INSERT INTO students (student_id, name, email, school, program, course, phone, eligibility_status)
@@ -59,9 +63,11 @@ const bulkUpsertStudents = async (students: any[]) => {
   return students.length; // Assuming all rows in batch were processed by ON CONFLICT
 };
 
-router.post('/upload-eligible', upload.single('file'), async (req, res) => {
+router.post("/upload-eligible", upload.single("file"), async (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ success: false, errors: ['No file uploaded'] });
+    return res
+      .status(400)
+      .json({ success: false, errors: ["No file uploaded"] });
   }
 
   const filePath = req.file.path;
@@ -77,20 +83,31 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
   // Function to clean up the temporary file
   const cleanupFile = (callback?: () => void) => {
     fs.unlink(filePath, (err) => {
-      if (err) console.error('Error deleting temporary file:', err);
+      if (err) console.error("Error deleting temporary file:", err);
       if (callback) callback();
     });
   };
 
   // Function to normalize column names (remove BOM, trim, lowercase, replace spaces with underscores)
   const normalizeColumnName = (name: string) => {
-    return name.replace(/\uFEFF/, '').trim().toLowerCase().replace(/\s+/g, '_');
+    return name
+      .replace(/\uFEFF/, "")
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "_");
   };
 
   // Function to validate and normalize student data
   const validateAndNormalizeStudent = (row: any) => {
     // Check for required fields
-    if (!row.student_id || !row.name || !row.email || !row.school || !row.program || !row.course) {
+    if (
+      !row.student_id ||
+      !row.name ||
+      !row.email ||
+      !row.school ||
+      !row.program ||
+      !row.course
+    ) {
       return null;
     }
     const studentIdInt = parseInt(row.student_id.trim(), 10);
@@ -102,57 +119,73 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
       school: row.school.trim(),
       program: row.program.trim(),
       course: row.course.trim(),
-      phone: row.phone ? row.phone.trim() : null
+      phone: row.phone ? row.phone.trim() : null,
     };
   };
 
   // Function to finalize the upload process (send response and emit socket event)
   const finalizeUpload = (success: boolean, finalErrors: string[] = []) => {
     const uploadErrors = errors.concat(finalErrors);
-    const fileName = req.file?.originalname || 'unknown';
-    const uploadedBy = 'admin'; // Assuming admin user performs upload
+    const fileName = req.file?.originalname || "unknown";
+    const uploadedBy = "admin"; // Assuming admin user performs upload
 
     // Log the upload to eligible_uploads (keeping this for detailed upload history)
     db.query(
       `INSERT INTO eligible_uploads (uploaded_by, file_name, errors_count) VALUES ($1, $2, $3)`,
-      [uploadedBy, fileName, uploadErrors.length]
-    ).catch(logError => console.error('Error logging eligible_uploads:', logError));
+      [uploadedBy, fileName, uploadErrors.length],
+    ).catch((logError) =>
+      console.error("Error logging eligible_uploads:", logError),
+    );
 
     // Log a general audit event for successful uploads
     if (success && uploadErrors.length === 0) {
       db.query(
         `INSERT INTO audit_logs (action, user_name, details) VALUES ($1, $2, $3)`,
-        ['UPLOAD', uploadedBy, `Successfully uploaded ${totalCount} eligible students from ${fileName}`]
-      ).catch(logError => console.error('Error logging audit_logs (success):', logError));
+        [
+          "UPLOAD",
+          uploadedBy,
+          `Successfully uploaded ${totalCount} eligible students from ${fileName}`,
+        ],
+      ).catch((logError) =>
+        console.error("Error logging audit_logs (success):", logError),
+      );
     } else if (uploadErrors.length > 0) {
-       // Log an audit event for uploads with errors
-       db.query(
+      // Log an audit event for uploads with errors
+      db.query(
         `INSERT INTO audit_logs (action, user_name, details) VALUES ($1, $2, $3)`,
-        ['UPLOAD_FAILED', uploadedBy, `Upload of ${fileName} completed with ${uploadErrors.length} errors.`]
-      ).catch(logError => console.error('Error logging audit_logs (failure):', logError));
+        [
+          "UPLOAD_FAILED",
+          uploadedBy,
+          `Upload of ${fileName} completed with ${uploadErrors.length} errors.`,
+        ],
+      ).catch((logError) =>
+        console.error("Error logging audit_logs (failure):", logError),
+      );
     }
 
     if (uploadErrors.length === 0 && totalDuplicates > 0) {
-      uploadErrors.push(`Found and skipped ${totalDuplicates} duplicate student ID(s).`);
+      uploadErrors.push(
+        `Found and skipped ${totalDuplicates} duplicate student ID(s).`,
+      );
     }
 
     // Emit socket event
-    io.emit('csv-upload-complete', { 
-      success: success && uploadErrors.length === 0, 
-      count: totalCount, 
+    io.emit("csv-upload-complete", {
+      success: success && uploadErrors.length === 0,
+      count: totalCount,
       duplicates: totalDuplicates, // Include duplicates in event
       errors: uploadErrors,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
 
     // Send HTTP response
     if (!res.headersSent) {
-        res.json({ 
-          success: success && uploadErrors.length === 0, 
-          count: totalCount, 
-          duplicates: totalDuplicates, // Include duplicates in response
-          errors: uploadErrors 
-        });
+      res.json({
+        success: success && uploadErrors.length === 0,
+        count: totalCount,
+        duplicates: totalDuplicates, // Include duplicates in response
+        errors: uploadErrors,
+      });
     }
   };
 
@@ -177,7 +210,9 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
       }
     } catch (batchErr) {
       console.error(`Error processing batch:`, batchErr);
-      errors.push(`Batch processing failed. Error: ${batchErr instanceof Error ? batchErr.message : String(batchErr)}`);
+      errors.push(
+        `Batch processing failed. Error: ${batchErr instanceof Error ? batchErr.message : String(batchErr)}`,
+      );
       // In a streaming context, deciding whether to stop or continue on batch error
       // depends on requirements. For now, we log and continue.
     }
@@ -185,28 +220,31 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
 
   try {
     fileStream = fs.createReadStream(filePath);
-    parser = parse({ 
+    parser = parse({
       columns: (headers: string[]) => headers.map(normalizeColumnName),
       trim: true,
-      skip_empty_lines: true
+      skip_empty_lines: true,
     });
 
     fileStream.pipe(parser);
 
-    parser.on('data', async (row: any) => {
-      console.log('DEBUG: Entered updated CSV upload handler');
+    parser.on("data", async (row: any) => {
+      console.log("DEBUG: Entered updated CSV upload handler");
       // Normalize all keys in the row
       const normalizedRow: any = {};
-      Object.keys(row).forEach(key => {
+      Object.keys(row).forEach((key) => {
         normalizedRow[normalizeColumnName(key)] = row[key];
       });
       if (!firstRowLogged) {
-        console.log('DEBUG: Normalized row:', normalizedRow);
-        console.log('DEBUG: Keys of normalized row:', Object.keys(normalizedRow));
+        console.log("DEBUG: Normalized row:", normalizedRow);
+        console.log(
+          "DEBUG: Keys of normalized row:",
+          Object.keys(normalizedRow),
+        );
         firstRowLogged = true;
       }
       const normalizedStudent = validateAndNormalizeStudent(normalizedRow);
-      console.log('DEBUG: Normalized student for DB:', normalizedStudent);
+      console.log("DEBUG: Normalized student for DB:", normalizedStudent);
       if (!normalizedStudent) {
         errors.push(`Skipping row due to missing data: ${JSON.stringify(row)}`);
         return;
@@ -220,7 +258,7 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
       }
     });
 
-    parser.on('end', async () => {
+    parser.on("end", async () => {
       // Process any remaining students in the last batch
       if (studentsBatch.length > 0) {
         await processBatch(studentsBatch);
@@ -229,26 +267,28 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
       cleanupFile();
     });
 
-    parser.on('error', (err: Error) => {
-      console.error('Error during CSV parsing:', err);
+    parser.on("error", (err: Error) => {
+      console.error("Error during CSV parsing:", err);
       // Destroy streams to prevent further events
       if (fileStream) fileStream.destroy();
       parser.end();
-      finalizeUpload(false, ['Failed to parse CSV file.', err.message]);
+      finalizeUpload(false, ["Failed to parse CSV file.", err.message]);
       cleanupFile();
     });
 
-    fileStream.on('error', (err: Error) => {
-      console.error('Error reading file stream:', err);
+    fileStream.on("error", (err: Error) => {
+      console.error("Error reading file stream:", err);
       // Destroy parser to prevent further events
       parser.end();
-      finalizeUpload(false, ['Failed to read uploaded file.', err.message]);
+      finalizeUpload(false, ["Failed to read uploaded file.", err.message]);
       cleanupFile();
     });
-
   } catch (initialErr) {
-    console.error('Initial file stream or parser setup error:', initialErr);
-    finalizeUpload(false, ['An internal error occurred setting up file processing.', initialErr instanceof Error ? initialErr.message : String(initialErr)]);
+    console.error("Initial file stream or parser setup error:", initialErr);
+    finalizeUpload(false, [
+      "An internal error occurred setting up file processing.",
+      initialErr instanceof Error ? initialErr.message : String(initialErr),
+    ]);
     cleanupFile();
   }
 });
@@ -270,7 +310,7 @@ router.post('/upload-eligible', upload.single('file'), async (req, res) => {
 //         email: row[2],
 //         school: row[3],
 //         program: row[4],
-//         course: row[5], 
+//         course: row[5],
 //       });
 //
 //       await db.query(

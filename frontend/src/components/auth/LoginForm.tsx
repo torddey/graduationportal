@@ -1,14 +1,14 @@
-import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import toast from 'react-hot-toast';
-import Button from '../ui/Button';
-import TextInput from '../ui/TextInput';
+import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+import Button from "../ui/Button";
+import TextInput from "../ui/TextInput";
 
 const LoginForm = () => {
-  const [step, setStep] = useState<'userId' | 'otp'>('userId');
-  const [userId, setUserId] = useState('');
-  const [otp, setOtp] = useState('');
+  const [step, setStep] = useState<"userId" | "otp">("userId");
+  const [userId, setUserId] = useState("");
+  const [otp, setOtp] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { login, verifyOtp, user } = useAuth();
   const navigate = useNavigate();
@@ -16,18 +16,18 @@ const LoginForm = () => {
   const handleUserIdSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userId.trim()) {
-      toast.error('Please enter your User ID');
+      toast.error("Please enter your User ID");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      localStorage.setItem('tempUserId', userId);
+      localStorage.setItem("tempUserId", userId);
       await login(userId);
-      toast.success('OTP sent to your registered email');
-      setStep('otp');
+      toast.success("OTP sent to your registered email");
+      setStep("otp");
     } catch (error) {
-      toast.error('Failed to send OTP. Please check your User ID.');
+      toast.error("Failed to send OTP. Please check your User ID.");
     } finally {
       setIsSubmitting(false);
     }
@@ -36,7 +36,7 @@ const LoginForm = () => {
   const handleOtpSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!otp.trim() || otp.length !== 6) {
-      toast.error('Please enter the 6-digit OTP');
+      toast.error("Please enter the 6-digit OTP");
       return;
     }
 
@@ -44,20 +44,22 @@ const LoginForm = () => {
     try {
       const success = await verifyOtp(userId, otp);
       if (success) {
-        toast.success('Login successful');
-        localStorage.removeItem('tempUserId');
+        toast.success("Login successful");
+        localStorage.removeItem("tempUserId");
         // Get the current user from localStorage after successful verification
-        const currentUser = JSON.parse(localStorage.getItem('userData') || '{}');
-        if (currentUser.role === 'admin') {
-          navigate('/admin');
+        const currentUser = JSON.parse(
+          localStorage.getItem("userData") || "{}",
+        );
+        if (currentUser.role === "admin") {
+          navigate("/admin");
         } else {
-          navigate('/registration');
+          navigate("/registration");
         }
       } else {
-        toast.error('Invalid OTP. Please try again.');
+        toast.error("Invalid OTP. Please try again.");
       }
     } catch (error) {
-      toast.error('Failed to verify OTP. Please try again.');
+      toast.error("Failed to verify OTP. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -65,7 +67,7 @@ const LoginForm = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-8 max-w-md w-full mx-auto">
-      {step === 'userId' ? (
+      {step === "userId" ? (
         <>
           <h2 className="text-2xl font-semibold text-gray-800 mb-6">Login</h2>
           <form onSubmit={handleUserIdSubmit}>
@@ -80,9 +82,9 @@ const LoginForm = () => {
                 disabled={isSubmitting}
               />
             </div>
-            <Button 
-              type="submit" 
-              fullWidth 
+            <Button
+              type="submit"
+              fullWidth
               loading={isSubmitting}
               disabled={isSubmitting || !userId.trim()}
             >
@@ -92,7 +94,9 @@ const LoginForm = () => {
         </>
       ) : (
         <>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-6">Enter OTP</h2>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+            Enter OTP
+          </h2>
           <p className="text-gray-600 mb-4">
             We've sent a one-time password to your registered email.
           </p>
@@ -102,16 +106,18 @@ const LoginForm = () => {
                 id="otp"
                 label="One-Time Password"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
+                onChange={(e) =>
+                  setOtp(e.target.value.replace(/[^0-9]/g, "").slice(0, 6))
+                }
                 placeholder="Enter 6-digit OTP"
                 required
                 maxLength={6}
                 disabled={isSubmitting}
               />
             </div>
-            <Button 
-              type="submit" 
-              fullWidth 
+            <Button
+              type="submit"
+              fullWidth
               loading={isSubmitting}
               disabled={isSubmitting || otp.length !== 6}
             >
@@ -120,7 +126,7 @@ const LoginForm = () => {
             <button
               type="button"
               className="mt-4 text-center w-full text-blue-600 hover:text-blue-800"
-              onClick={() => setStep('userId')}
+              onClick={() => setStep("userId")}
               disabled={isSubmitting}
             >
               Back to User ID

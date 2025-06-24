@@ -1,1 +1,1 @@
-declare module 'json2csv'; 
+declare module "json2csv";

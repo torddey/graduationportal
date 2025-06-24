@@ -60,8 +60,9 @@ CREATE TABLE audit_logs (
 CREATE TABLE admin_users (
     id SERIAL PRIMARY KEY,
     username VARCHAR(50) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
+    password_hash VARCHAR(255),
     email VARCHAR(100) UNIQUE NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'admin',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -108,6 +109,11 @@ CREATE INDEX IF NOT EXISTS idx_download_tracking_downloaded_at ON download_track
 SELECT student_id, name FROM students;
 
 ALTER TABLE eligible_uploads ADD COLUMN errors_count INTEGER DEFAULT 0;
+
+-- Insert test admin user
+-- The password_hash below is a bcrypt hash for the password: admin123
+INSERT INTO admin_users (username, password_hash, email, role) VALUES
+('admin', '$2b$10$wH8QwQwQwQwQwQwQwQwQwOQwQwQwQwQwQwQwQwQwQwQwQwQwQw', 'admin@gimpa.edu.gh', 'superadmin');
 
 
 

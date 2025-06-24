@@ -1,14 +1,12 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authService } from '../services/authService';
-
-// Unified User type for both students and admins
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  role: 'student' | 'admin';
-  [key: string]: any;
-};
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
+import { authService } from "../services/authService";
+import type { User } from "../types/User";
 
 interface AuthContextType {
   user: User | null;
@@ -37,13 +35,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const userData = await authService.getCurrentUser();
         if (userData) {
           setUser(userData);
-          setIsAdmin(userData.role === 'admin');
+          setIsAdmin(userData.role === "admin" || userData.role === "superadmin");
         } else {
           // If no user data is returned but no error was thrown (e.g., no token), ensure logged out state
           logout();
         }
       } catch (error) {
-        console.error('Failed to restore authentication state:', error);
+        console.error("Failed to restore authentication state:", error);
         // If an error is caught (e.g., invalid token), logout the user
         logout();
       } finally {
@@ -60,7 +58,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await authService.requestOtp(userId);
       // We don't set the user here yet - we'll do that after OTP verification
     } catch (error) {
-      console.error('Login failed:', error);
+      console.error("Login failed:", error);
       throw error;
     } finally {
       setLoading(false);
@@ -72,10 +70,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       const userData = await authService.verifyOtp(userId, otp);
       setUser(userData);
-      setIsAdmin(userData.role === 'admin');
+      setIsAdmin(userData.role === "admin" || userData.role === "superadmin");
       return true;
     } catch (error) {
-      console.error('OTP verification failed:', error);
+      console.error("OTP verification failed:", error);
       return false;
     } finally {
       setLoading(false);
@@ -94,7 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     login,
     verifyOtp,
     logout,
-    isAdmin
+    isAdmin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -103,7 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error("useAuth must be used within an AuthProvider");
   }
   return context;
 };

@@ -1,4 +1,4 @@
-import React, { InputHTMLAttributes, ReactNode } from 'react';
+import React, { InputHTMLAttributes, ReactNode } from "react";
 
 interface CheckboxProps extends InputHTMLAttributes<HTMLInputElement> {
   label: ReactNode;
@@ -9,7 +9,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
   id,
   label,
   helperText,
-  className = '',
+  className = "",
   ...props
 }) => {
   return (
@@ -26,9 +26,7 @@ const Checkbox: React.FC<CheckboxProps> = ({
         <label htmlFor={id} className="font-medium text-gray-700">
           {label} {props.required && <span className="text-red-500">*</span>}
         </label>
-        {helperText && (
-          <p className="text-gray-500">{helperText}</p>
-        )}
+        {helperText && <p className="text-gray-500">{helperText}</p>}
       </div>
     </div>
   );

@@ -6,5 +6,5 @@ export interface User {
   program: string;
   isEligible: boolean;
   hasRegistered: boolean;
-  role: 'student' | 'admin';
+  role: "student" | "admin" | "superadmin";
 }

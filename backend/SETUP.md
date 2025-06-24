@@ -36,4 +36,4 @@ CORS_ORIGIN=http://localhost:3000
 - Never commit `.env` files to version control
 - Use strong, unique passwords for database access
 - Rotate JWT secrets regularly in production
-- Use environment-specific configurations for different deployment stages 
+- Use environment-specific configurations for different deployment stages

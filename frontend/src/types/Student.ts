@@ -12,7 +12,7 @@ export interface Student {
   requiredCredits: number;
   address: string;
   phone: string;
-  role?: 'student' | 'admin'; 
+  role?: "student" | "admin";
   school: string;
   course: string;
 }

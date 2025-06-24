@@ -12,6 +12,7 @@ A comprehensive graduation registration and management system for GIMPA (Ghana I
 - [Database Schema](#database-schema)
 - [Setup & Installation](#setup--installation)
 - [Scripts](#scripts)
+- [Code Linting & Project Hygiene](#code-linting--project-hygiene)
 - [Environment Variables](#environment-variables)
 - [API Endpoints](#api-endpoints)
 - [Frontend Overview](#frontend-overview)
@@ -186,6 +187,36 @@ npm run dev
 - `build`: Build frontend for production
 - `lint`: Lint code
 - `preview`: Preview production build
+
+---
+
+## Code Linting & Project Hygiene
+
+### Linting
+- **ESLint** is used for both backend and frontend to enforce code quality and consistency.
+- Linting is configured for TypeScript and modern JavaScript best practices.
+- The `dist/` directory is ignored from linting via a `.eslintignore` file in the backend.
+
+#### To lint and auto-fix issues:
+- **Backend:**
+  ```sh
+  cd backend
+  npm run lint
+  # or for auto-fix:
+  npx eslint --fix --ext .ts,.tsx .
+  ```
+- **Frontend:**
+  ```sh
+  cd frontend
+  npm run lint
+  # or for auto-fix:
+  npx eslint --fix --ext .ts,.tsx .
+  ```
+
+#### Notes:
+- Add new rules or ignore files as needed in `eslint.config.js` or `.eslintignore`.
+- Keep code clean by removing unused imports, variables, and files regularly.
+- Run linting before committing or pushing changes to maintain code quality.
 
 ---
 
