@@ -558,6 +558,7 @@ router.get("/export/registrations", async (req, res) => {
         "Emergency Contact Phone": formData.emergencyContact?.phone || "",
         "Guest Count": formData.guestCount || "",
         Dignitaries: formData.dignitaries || "",
+        "Dignitaries Details": formData.dignitaries === "yes" ? (formData.dignitariesDetails || "") : "",
         "Special Requirements": formData.specialRequirements || "",
         "Registered At": new Date(registration.created_at).toLocaleString(),
       };

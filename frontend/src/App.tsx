@@ -17,6 +17,7 @@ import NotFoundPage from "./pages/NotFoundPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import NoticePage from "./pages/NoticePage";
+import PrintTest from "./pages/admin/PrintTest";
 
 function App() {
   return (
@@ -82,6 +83,14 @@ function App() {
               element={
                 <AdminRoute>
                   <AdminAnalytics />
+                </AdminRoute>
+              }
+            />
+            <Route
+              path="/admin/print-test"
+              element={
+                <AdminRoute>
+                  <PrintTest />
                 </AdminRoute>
               }
             />

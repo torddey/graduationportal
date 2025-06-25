@@ -4,6 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { GraduationCap, CheckCircle, Clock, Mail } from "lucide-react";
 import Button from "../components/ui/Button";
 import LoadingSpinner from "../components/ui/LoadingSpinner";
+import graduationImg from '../assets/graduation.jpg';
 
 interface TimelineDates {
   registrationDeadline: string;
@@ -67,8 +68,17 @@ const HomePage = () => {
   return (
     <div className="flex flex-col min-h-[calc(100vh-14rem)]">
       {/* Hero Section */}
-      <section className="bg-gradient-to-b from-[#1a365d] to-[#2a4365] text-white py-16 md:py-24">
-        <div className="container mx-auto px-4 text-center">
+      <section className="relative bg-gradient-to-b from-[#1a365d] to-[#2a4365] text-white py-16 md:py-24 overflow-hidden">
+        {/* Blurred Background Image */}
+        <img
+          src={graduationImg}
+          alt="Graduating students background"
+          className="absolute inset-0 w-full h-full object-cover filter blur-sm scale-105 z-0"
+          style={{ objectPosition: 'center' }}
+        />
+        {/* Overlay */}
+        <div className="absolute inset-0 bg-black bg-opacity-60 z-10" />
+        <div className="container mx-auto px-4 text-center relative z-20 flex flex-col items-center justify-center min-h-[300px]">
           <h1 className="text-4xl md:text-5xl font-bold mb-6">
             Graduation Portal
           </h1>

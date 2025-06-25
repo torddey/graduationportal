@@ -15,6 +15,7 @@ export interface RegistrationForm {
   };
   guestCount: number;
   dignitaries: "yes" | "no";
+  dignitariesDetails?: string;
   specialRequirements: "physical_disability" | "visual_impairment" | "none";
   attendanceConfirmed: boolean;
   agreeToTerms: boolean;

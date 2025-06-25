@@ -28,6 +28,7 @@ const initialState: RegistrationFormType = {
   },
   guestCount: 2,
   dignitaries: "no",
+  dignitariesDetails: "",
   specialRequirements: "none",
   attendanceConfirmed: false,
   agreeToTerms: false,
@@ -47,6 +48,8 @@ const RegistrationForm = () => {
     postalCode: user?.postalCode || "",
     city: user?.city || "",
     country: user?.country || "",
+    dignitaries: user?.dignitaries || "no",
+    dignitariesDetails: user?.dignitariesDetails || "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [step, setStep] = useState(1);
@@ -73,6 +76,9 @@ const RegistrationForm = () => {
         ...prev,
         [name]:
           type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+        ...(name === "dignitaries" && value === "no"
+          ? { dignitariesDetails: "" }
+          : {}),
       }));
     }
   };
@@ -82,6 +88,11 @@ const RegistrationForm = () => {
 
     if (!user || !form.studentId) {
       toast.error("User data is not loaded, or student ID is missing.");
+      return;
+    }
+
+    if (form.dignitaries === "yes" && !form.dignitariesDetails.trim()) {
+      toast.error("Please specify the type of dignitaries you are inviting.");
       return;
     }
 
@@ -100,6 +111,7 @@ const RegistrationForm = () => {
         emergencyContact: form.emergencyContact,
         guestCount: form.guestCount,
         dignitaries: form.dignitaries,
+        dignitariesDetails: form.dignitaries === "yes" ? form.dignitariesDetails : undefined,
         specialRequirements: form.specialRequirements,
         attendanceConfirmed: form.attendanceConfirmed,
         agreeToTerms: form.agreeToTerms,
@@ -354,6 +366,21 @@ const RegistrationForm = () => {
                 ]}
                 disabled={isSubmitting}
               />
+
+              {form.dignitaries === "yes" && (
+                <TextInput
+                  id="dignitariesDetails"
+                  name="dignitariesDetails"
+                  label="Please specify the type of dignitaries you are inviting"
+                  value={form.dignitariesDetails}
+                  onChange={handleChange}
+                  required
+                  disabled={isSubmitting}
+                  maxLength={100}
+                  placeholder="e.g. Chief, Member of Parliament, Minister, etc."
+                  className="mt-2"
+                />
+              )}
 
               <p className="text-sm text-gray-500 mt-2">
                 Each graduate is allowed to bring up to 4 guests to the

@@ -531,6 +531,20 @@ router.get("/export/:studentId", async (req, res) => {
       page2Y += 25;
     });
 
+    // Add dignitaries details if present
+    if (formData.dignitaries === "yes" && formData.dignitariesDetails) {
+      doc
+        .fontSize(12)
+        .font("Helvetica")
+        .fill("#2d3748")
+        .text(
+          `Dignitaries Details: ${formData.dignitariesDetails}`,
+          50,
+          page2Y
+        );
+      page2Y += 25;
+    }
+
     // Special Requirements
     if (formData.specialRequirements) {
       doc
